@@ -7,4 +7,4 @@ cabal build
 then 
 ```
 cabal run
-``
+```
