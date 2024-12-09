@@ -7,7 +7,9 @@ import Interp ( andM, interpM, orM, pairVReducer )
 import Control.Monad.State.Lazy ( MonadState(put, get) )
 
 
--- examples of test cases
+-- examples of observables as test cases
+-- protocols of observation/measurement
+-- empirical synthesis process
 
 pureContingent :: Expr -> M Outcome
 pureContingent expr = get
