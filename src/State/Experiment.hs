@@ -59,6 +59,14 @@ expn expr (f:fs) = do
     os <- expn expr fs
     return (o:os)
 
+-- joint outcomes given a list of context
+expnn :: Qsystem -> [Context] -> M [[Outcome]]
+expnn expr [] = return []
+expnn expr (c:cs) = do
+    os <- expn expr c
+    oss <- expnn expr cs
+    return (os:oss)
+
 
 randomBool :: Int -> (Bool, StdGen)
 randomBool seed = random (mkStdGen seed)
@@ -68,14 +76,21 @@ randomBoolStream seed = randoms (mkStdGen seed)
 
 type Seed = Int
 
--- reify the computational effect
-runExperimentS :: Qsystem -> Context -> Seed -> [Outcome]
-runExperimentS expr ctx seed =
+-- reify the computational effect per context
+runContextS :: Qsystem -> Context -> Seed -> [Outcome]
+runContextS expr ctx seed =
     let m = expn expr ctx in
         evalState m (fst (randomBool seed))
 
+-- reify the computational effect per experiment
+runExperimentS :: Qsystem -> [Context] -> Seed -> [[Outcome]]
+runExperimentS expr cs seed =
+    let m = expnn expr cs in
+        evalState m (fst (randomBool seed))
+
+-- connecting contexts with progression (seed + 1)
 printResultS :: Qsystem -> [Context] -> Seed -> IO ()
 printResultS expr [] seed = pure ()
 printResultS expr (c:cs) seed = do
-    print (runExperimentS expr c seed)
+    print (runContextS expr c seed)
     printResultS expr cs (seed + 1)

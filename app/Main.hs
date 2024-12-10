@@ -16,17 +16,23 @@ ctx3 = [causeTrue, hasError]
 ctx4 = [causeFalse, hasError]
 
 ctx5 = [causeNot, pureContingent]
-ctx6 = [causeId, pureContingent]
-ctx7 = [causeNot, hasError]
-ctx8 = [causeId, hasError]
+ctx6 = [pureContingent, pureContingent]
+ctx7 = [pureContingent, causeNot]
 
 -- two by two (Bell configuration)
 suite1 = [ctx1, ctx2, ctx3, ctx4]
-suite2 = [ctx5, ctx6, ctx7, ctx8]
+suite2 = [ctx5, ctx6, ctx7, ctx5, ctx6, ctx7]
+
+-- is it possible to reproduce PR-box like strong contextuality? 
+-- add more state with different "frequency"?
+
 -- one by one
 -- suite2 = [[pureContingent], [causeFalse], [hasError], [causeTrue]]
+
+-- outcomes highly depend on order of measurements - causal contextuality
+-- how to implement "retro-causality"?
 
 
 main :: IO ()
 main = do
-    printResultS e1 suite1 111
+    print (runExperimentS e1 suite2 123)
