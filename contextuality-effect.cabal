@@ -27,11 +27,14 @@ library
   exposed-modules:
       Lib
       Syntax
-      Interp
-      Observable
-      Experiment
-      State
-      Continuation
+      State.Effect
+      State.Experiment
+      State.Interp
+      State.Observable
+      Cont.Effect
+      Cont.Experiment
+      Cont.Interp
+      Cont.Observable
   other-modules:
       Paths_contextuality_effect
   autogen-modules:

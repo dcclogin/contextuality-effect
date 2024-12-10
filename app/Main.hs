@@ -1,8 +1,8 @@
 module Main (main) where
 
 import Syntax
-import Observable
-import Experiment
+import State.Observable
+import State.Experiment
 
 e1, e2, e3 :: Expr
 e1 = NotE (Var "s")
@@ -21,13 +21,6 @@ suite1 = [ctx1,ctx2,ctx3,ctx4]
 suite2 = [[pureContingent], [causeFalse], [hasError], [causeTrue]]
 
 
-printResult :: Qsystem -> [Context] -> Seed -> IO ()
-printResult expr [] seed = pure ()
-printResult expr (c:cs) seed = do
-    print (runExperiment expr c seed)
-    printResult expr cs (seed + 1)
-
-
 main :: IO ()
 main = do
-    printResult e1 suite1 111
+    printResultS e1 suite1 111
