@@ -14,11 +14,32 @@ import Control.Monad.State.Lazy ( MonadState(put, get) )
 pureContingent :: Expr -> M Outcome
 pureContingent expr = get
 
+pureContingentNot :: Expr -> M Outcome
+pureContingentNot expr = do
+    v <- get
+    return (not v)
+
 contingentOnInterp :: Expr -> M Outcome
 contingentOnInterp expr = do
     v <- interpM [] expr
     case v of
         BoolV b -> return b
+        _ -> get
+
+contingentOnInterpAnd :: Expr -> M Outcome
+contingentOnInterpAnd expr = do
+    v <- interpM [] expr
+    b1 <- get
+    case v of
+        BoolV b2 -> return (b1 && b2)
+        _ -> get
+
+contingentOnInterpOr :: Expr -> M Outcome
+contingentOnInterpOr expr = do
+    v <- interpM [] expr
+    b1 <- get
+    case v of
+        BoolV b2 -> return (b1 || b2)
         _ -> get
 
 contingentOnReducerOr :: Expr -> M Outcome
@@ -46,6 +67,28 @@ causeFalse :: Expr -> M Outcome
 causeFalse expr = do
     put False
     contingentOnInterp expr
+
+causeId :: Expr -> M Outcome
+causeId expr = do
+    v <- get
+    put v
+    return v
+
+causeNot :: Expr -> M Outcome
+causeNot expr = do
+    v <- get
+    put (not v)
+    return v
+
+causeNot2 :: Expr -> M Outcome
+causeNot2 expr = do
+    causeNot expr
+
+causeNotReturnNot :: Expr -> M Outcome
+causeNotReturnNot expr = do
+    v <- get
+    put (not v)
+    return (not v)
 
 hasError :: Expr -> M Outcome
 hasError expr = do
