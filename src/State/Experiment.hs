@@ -89,8 +89,9 @@ runExperimentS expr cs seed =
         evalState m (fst (randomBool seed))
 
 -- connecting contexts with progression (seed + 1)
-printResultS :: Qsystem -> [Context] -> Seed -> IO ()
-printResultS expr [] seed = pure ()
-printResultS expr (c:cs) seed = do
-    print (runContextS expr c seed)
-    printResultS expr cs (seed + 1)
+runContextsS :: Qsystem -> [Context] -> Seed -> [[Outcome]]
+runContextsS expr [] seed = []
+runContextsS expr (c:cs) seed =
+    let os = runContextS expr c seed in
+        let oss = runContextsS expr cs (seed + 1) in
+            (os:oss)

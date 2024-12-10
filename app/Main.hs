@@ -21,10 +21,12 @@ ctx7 = [pureContingent, causeNot]
 
 -- two by two (Bell configuration)
 suite1 = [ctx1, ctx2, ctx3, ctx4]
+
+-- two by two and traverse twice
 suite2 = [ctx5, ctx6, ctx7, ctx5, ctx6, ctx7]
 
--- is it possible to reproduce PR-box like strong contextuality? 
--- add more state with different "frequency"?
+-- is it possible to reproduce PR-box (Möbius strip) strong contextuality? 
+-- add one more global variable recording even/odd times certain observation is performed (e.g. causeNot)?
 
 -- one by one
 -- suite2 = [[pureContingent], [causeFalse], [hasError], [causeTrue]]
@@ -35,4 +37,5 @@ suite2 = [ctx5, ctx6, ctx7, ctx5, ctx6, ctx7]
 
 main :: IO ()
 main = do
+    print (runContextsS e1 suite2 123)
     print (runExperimentS e1 suite2 123)
