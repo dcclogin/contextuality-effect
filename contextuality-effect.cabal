@@ -36,6 +36,7 @@ library
       State.InterpRG
       State.Observable
       State.ObservableRG
+      State.ObservableRG2
       Syntax
       SyntaxRG
   other-modules:

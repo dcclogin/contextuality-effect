@@ -34,7 +34,7 @@ suite2 = [ctx5, ctx6, ctx7, ctx5, ctx6, ctx7]
 -- outcomes highly depend on order of measurements - causal contextuality
 -- how to implement "retro-causality"?
 
-printR :: IO ()
-printR = do
+printRun :: IO ()
+printRun = do
     print (runContextsS e1 suite2 123)
     print (runExperimentS e1 suite2 123)

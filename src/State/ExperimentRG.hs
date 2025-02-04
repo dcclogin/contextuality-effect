@@ -1,27 +1,27 @@
 module State.ExperimentRG where
 
 import SyntaxRG ( ExprRG, BoolRG )
-import State.Effect ( M )
+import State.Effect ( M, M2 )
 import System.Random ( random, randoms, mkStdGen, StdGen )
 import Control.Monad.State.Lazy ( evalState )
 
-type Outcome = BoolRG
+type Outcome = Bool
 
 -- expression as quantum system
 type Qsystem = ExprRG
 -- test as single observable
-type Observable = Qsystem -> M Outcome
+type Observable = Qsystem -> M2 Outcome
 -- test suite as measurement context
 type Context = [Observable]
 -- joint outcomes given a context
-type Experiment = Qsystem -> Context -> M [Outcome]
+type Experiment = Qsystem -> Context -> M2 [Outcome]
 
 -- single observable outcome
-exp1 :: Qsystem -> Observable -> M Outcome
+exp1 :: Qsystem -> Observable -> M2 Outcome
 exp1 expr f = f expr
 
 -- joint outcomes of 2 observables
-exp2 :: Qsystem -> (Observable, Observable) -> M (Outcome, Outcome)
+exp2 :: Qsystem -> (Observable, Observable) -> M2 (Outcome, Outcome)
 exp2 expr (f1, f2) = do
     o1 <- f1 expr
     o2 <- f2 expr
@@ -30,7 +30,7 @@ exp2 expr (f1, f2) = do
 -- joint outcomes of 3 observables
 exp3 :: Qsystem 
     -> (Observable, Observable, Observable) 
-    -> M (Outcome, Outcome, Outcome)
+    -> M2 (Outcome, Outcome, Outcome)
 exp3 expr (f1, f2, f3) = do
     o1 <- f1 expr
     o2 <- f2 expr
@@ -40,7 +40,7 @@ exp3 expr (f1, f2, f3) = do
 -- joint outcomes of 4 observables
 exp4 :: Qsystem
     -> (Observable, Observable, Observable, Observable)
-    -> M (Outcome, Outcome, Outcome, Outcome)
+    -> M2 (Outcome, Outcome, Outcome, Outcome)
 exp4 expr (f1, f2, f3, f4) = do
     o1 <- f1 expr
     o2 <- f2 expr
@@ -50,7 +50,7 @@ exp4 expr (f1, f2, f3, f4) = do
 
 -- generalized joint outcomes given a context (list) of observables
 -- joint outcomes depends on the order of observables...
-expn :: Qsystem -> Context -> M [Outcome]
+expn :: Qsystem -> Context -> M2 [Outcome]
 expn expr [] = return []
 expn expr (f:fs) = do
     o <- f expr
@@ -58,7 +58,7 @@ expn expr (f:fs) = do
     return (o:os)
 
 -- joint outcomes given a list of context
-expnn :: Qsystem -> [Context] -> M [[Outcome]]
+expnn :: Qsystem -> [Context] -> M2 [[Outcome]]
 expnn expr [] = return []
 expnn expr (c:cs) = do
     os <- expn expr c
@@ -78,13 +78,13 @@ type Seed = Int
 runContextS :: Qsystem -> Context -> Seed -> [Outcome]
 runContextS expr ctx seed =
     let m = expn expr ctx in
-        evalState m (fst (randomBool seed))
+        evalState m (fst (randomBool seed), 0)
 
 -- reify the computational effect per experiment
 runExperimentS :: Qsystem -> [Context] -> Seed -> [[Outcome]]
 runExperimentS expr cs seed =
     let m = expnn expr cs in
-        evalState m (fst (randomBool seed))
+        evalState m (fst (randomBool seed), 0)
 
 -- connecting contexts with progression (seed + 1)
 runContextsS :: Qsystem -> [Context] -> Seed -> [[Outcome]]

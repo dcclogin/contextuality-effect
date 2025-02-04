@@ -4,7 +4,8 @@ import Syntax
 import State.Observable
 import State.Experiment
 import ExprRG
-
+import System.Random
 
 main :: IO ()
-main = printR
+main = do
+    printRun
