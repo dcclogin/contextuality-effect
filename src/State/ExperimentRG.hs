@@ -1,16 +1,14 @@
-module State.Experiment where
+module State.ExperimentRG where
 
-import Syntax
+import SyntaxRG ( ExprRG, BoolRG )
 import State.Effect ( M )
 import System.Random ( random, randoms, mkStdGen, StdGen )
 import Control.Monad.State.Lazy ( evalState )
 
--- experiment apparatus
-
-type Outcome = Bool
+type Outcome = BoolRG
 
 -- expression as quantum system
-type Qsystem = Expr
+type Qsystem = ExprRG
 -- test as single observable
 type Observable = Qsystem -> M Outcome
 -- test suite as measurement context

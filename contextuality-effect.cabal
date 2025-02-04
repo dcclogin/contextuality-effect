@@ -6,14 +6,13 @@ cabal-version: 2.2
 
 name:           contextuality-effect
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/dcclogin/contextuality-effect#readme>
-homepage:       https://github.com/dcclogin/contextuality-effect#readme
-bug-reports:    https://github.com/dcclogin/contextuality-effect/issues
-author:         dcclogin
+description:    Please see the README on GitHub at <https://github.com/githubuser/contextuality-effect#readme>
+homepage:       https://github.com/githubuser/contextuality-effect#readme
+bug-reports:    https://github.com/githubuser/contextuality-effect/issues
+author:         Author name here
 maintainer:     example@example.com
-copyright:      2024 dcclogin
+copyright:      2024 Author name here
 license:        BSD-3-Clause
-license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
@@ -21,20 +20,24 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/dcclogin/contextuality-effect
+  location: https://github.com/githubuser/contextuality-effect
 
 library
   exposed-modules:
-      Lib
-      Syntax
-      State.Effect
-      State.Experiment
-      State.Interp
-      State.Observable
       Cont.Effect
       Cont.Experiment
       Cont.Interp
       Cont.Observable
+      Lib
+      State.Effect
+      State.Experiment
+      State.ExperimentRG
+      State.Interp
+      State.InterpRG
+      State.Observable
+      State.ObservableRG
+      Syntax
+      SyntaxRG
   other-modules:
       Paths_contextuality_effect
   autogen-modules:
@@ -51,6 +54,8 @@ library
 executable contextuality-effect-exe
   main-is: Main.hs
   other-modules:
+      Expr
+      ExprRG
       Paths_contextuality_effect
   autogen-modules:
       Paths_contextuality_effect
@@ -60,6 +65,8 @@ executable contextuality-effect-exe
   build-depends:
       base >=4.7 && <5
     , contextuality-effect
+    , mtl
+    , random
   default-language: Haskell2010
 
 test-suite contextuality-effect-test
