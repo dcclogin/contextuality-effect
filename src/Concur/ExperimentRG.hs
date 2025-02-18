@@ -36,6 +36,7 @@ runContextT qState (obsL, obsR) = do
                      (atomically $ obsR qState hVar)
     return (resL, resR)
 
+-- run multiple pairs of Qsystems and Contexts
 runContextsT :: [Qsystem] -> [Context] -> IO [(Outcome, Outcome)]
 runContextsT qStates contexts = 
     sequence $ zipWith runContextT qStates contexts

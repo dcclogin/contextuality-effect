@@ -28,15 +28,6 @@ randomListPure n xs seed =
     let indices = take n $ randomRs (0, length xs - 1) (mkStdGen seed)
     in map (xs !!) indices
 
-exprs :: [Qsystem]
-exprs = genQStates 10000
-
-ctxs :: [Ctx]
-ctxs = randomListPure 10000 ctxCollection 23333
-
-contexts :: [Context]
-contexts = map getContext ctxs
-
 
 getStats :: [Ctx] -> [(Outcome, Outcome)] -> (Int, Int, Int, Int)
 getStats [] _ = (0, 0, 0, 0)
@@ -49,10 +40,14 @@ getStats (c:cs) (r:rs) =
 
 printRun :: IO ()
 printRun = do
-    rs <- runContextsT exprs contexts
-    let (s1, d1, s2, d2) = getStats ctxs rs in do
-        putStrLn "\nMeasurement results (Concurrency):"
-        print $ "RR/GG for Ctx11, Ctx22, Ctx33: " ++ show s1
-        print $ "RG/GR for Ctx11, Ctx22, Ctx33: " ++ show d1
-        print $ "RR/GG for Ctx12, Ctx13, Ctx21, Ctx23, Ctx31, Ctx32: " ++ show s2
-        print $ "RG/GR for Ctx12, Ctx13, Ctx21, Ctx23, Ctx31, Ctx32: " ++ show d2
+    let n = 5000
+        exprs = genQStates n :: [Qsystem]
+        ctxs = randomListPure n ctxCollection 33333 :: [Ctx]
+        contexts = map getContext ctxs :: [Context] in do
+        rs <- runContextsT exprs contexts
+        let (s1, d1, s2, d2) = getStats ctxs rs in do
+            putStrLn "\nMeasurement results (Concurrency):"
+            print $ "RR/GG for Ctx11, Ctx22, Ctx33: " ++ show s1
+            print $ "RG/GR for Ctx11, Ctx22, Ctx33: " ++ show d1
+            print $ "RR/GG for Ctx12, Ctx13, Ctx21, Ctx23, Ctx31, Ctx32: " ++ show s2
+            print $ "RG/GR for Ctx12, Ctx13, Ctx21, Ctx23, Ctx31, Ctx32: " ++ show d2

@@ -1,7 +1,7 @@
 module ExprRG where
 
 import SyntaxRG
-import State.ObservableRG
+import State.ObservableRG3
 import State.ExperimentRG
 import System.Random
 
@@ -18,10 +18,6 @@ genQStates :: Int -> [Qsystem]
 genQStates 0 = []
 genQStates n = genQState gen : genQStates (n - 1)
     where gen = mkStdGen (n + 77777)
-
--- generate a stream of random pairs of particles (up to 10000 pairs)
-exprs :: [Qsystem]
-exprs = genQStates 10000
 
 data Ctx = Ctx11 | Ctx12 | Ctx13 | Ctx21 | Ctx22 | Ctx23 | Ctx31 | Ctx32 | Ctx33
     deriving (Show, Eq, Enum)
@@ -47,17 +43,8 @@ randomListPure n xs seed =
     let indices = take n $ randomRs (0, length xs - 1) (mkStdGen seed)
     in map (xs !!) indices
 
-ctxs :: [Ctx]
-ctxs = randomListPure 10000 ctxCollection 23333
-
-contexts :: [Context]
-contexts = map getContext ctxs
-
 getResult :: [Qsystem] -> [Context] -> [Int] -> [[Outcome]]
 getResult es cs is = zipWith3 runContextS es cs is
-
-rs :: [[Outcome]]
-rs = getResult exprs contexts [10001..20000]
 
 -- get statistics
 -- group (1) ctx11, ctx22, ctx33: 1,5,9
@@ -81,9 +68,14 @@ getStats (c:cs) (r:rs) =
 
 printRun :: IO ()
 printRun = do
-    let (s1, d1, s2, d2) = getStats ctxs rs in do
-        putStrLn "\nMeasurement results (State):"
-        print $ "RR/GG for Ctx11, Ctx22, Ctx33: " ++ show s1
-        print $ "RG/GR for Ctx11, Ctx22, Ctx33: " ++ show d1
-        print $ "RR/GG for Ctx12, Ctx13, Ctx21, Ctx23, Ctx31, Ctx32: " ++ show s2
-        print $ "RG/GR for Ctx12, Ctx13, Ctx21, Ctx23, Ctx31, Ctx32: " ++ show d2
+    let n = 5000
+        exprs = genQStates n :: [Qsystem]
+        ctxs = randomListPure n ctxCollection 23333 :: [Ctx]
+        contexts = map getContext ctxs :: [Context]
+        rs = getResult exprs contexts [(n + 1)..(2 * n)]
+        (s1, d1, s2, d2) = getStats ctxs rs in do
+            putStrLn "\nMeasurement results (State):"
+            print $ "RR/GG for Ctx11, Ctx22, Ctx33: " ++ show s1
+            print $ "RG/GR for Ctx11, Ctx22, Ctx33: " ++ show d1
+            print $ "RR/GG for Ctx12, Ctx13, Ctx21, Ctx23, Ctx31, Ctx32: " ++ show s2
+            print $ "RG/GR for Ctx12, Ctx13, Ctx21, Ctx23, Ctx31, Ctx32: " ++ show d2
