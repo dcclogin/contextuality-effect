@@ -8,11 +8,8 @@ import State.Effect ( M, M2 )
 -- simply turn R/G into True/False for the sake of simplicity
 
 interpRG :: ExprRG -> M2 (Bool, Bool, Bool)
-interpRG (a1, a2, a3) = return (b1, b2, b3)
+interpRG (a1, a2, a3) = return (f a1, f a2, f a3)
     where
         f :: BoolRG -> Bool
         f R = True
         f G = False
-        b1 = f a1
-        b2 = f a2
-        b3 = f a3
