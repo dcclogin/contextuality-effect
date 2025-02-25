@@ -1,6 +1,5 @@
 module ExprRGConcur where
 
-import SyntaxRG
 import Concur.ObservableRG
 import Concur.ExperimentRG
 import System.Random (mkStdGen, randomRs)
@@ -38,11 +37,10 @@ getStats (c:cs) (r:rs) =
         then if o1 == o2 then (s1 + 1, d1, s2, d2) else (s1, d1 + 1, s2, d2)
         else if o1 == o2 then (s1, d1, s2 + 1, d2) else (s1, d1, s2, d2 + 1)
 
-printRun :: IO ()
-printRun = do
-    let n = 5000
-        exprs = genQStates n :: [Qsystem]
-        ctxs = randomListPure n ctxCollection 33333 :: [Ctx]
+printRun :: Int -> Int -> IO ()
+printRun n seed = do 
+    let exprs = genQStates n :: [Qsystem]
+        ctxs = randomListPure n ctxCollection seed :: [Ctx]
         contexts = map getContext ctxs :: [Context] in do
         rs <- runContextsT exprs contexts
         let (s1, d1, s2, d2) = getStats ctxs rs in do

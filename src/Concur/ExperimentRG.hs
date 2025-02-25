@@ -27,6 +27,13 @@ genQStates 0 = []
 genQStates n = genQState gen : genQStates (n - 1)
     where gen = mkStdGen n
 
+-- Execute single observable measurement
+runSingletonT :: Qsystem -> (Observable) -> IO (Outcome)
+runSingletonT qState (obs) = do
+    hVar <- newTVarIO (False, 0)
+    (res) <- atomically $ obs qState hVar
+    return (res)
+
 -- Execute both measurements concurrently
 runContextT :: Qsystem -> Context -> IO (Outcome, Outcome)
 runContextT qState (obsL, obsR) = do

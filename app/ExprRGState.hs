@@ -1,4 +1,4 @@
-module ExprRG where
+module ExprRGState where
 
 import SyntaxRG
 import State.ObservableRG3
@@ -66,11 +66,10 @@ getStats (c:cs) (r:rs) =
             then (s1, d1, s2 + 1, d2)
             else (s1, d1, s2, d2 + 1)
 
-printRun :: IO ()
-printRun = do
-    let n = 5000
-        exprs = genQStates n :: [Qsystem]
-        ctxs = randomListPure n ctxCollection 23333 :: [Ctx]
+printRun :: Int -> Int -> IO ()
+printRun n seed = do 
+    let exprs = genQStates n :: [Qsystem]
+        ctxs = randomListPure n ctxCollection seed :: [Ctx]
         contexts = map getContext ctxs :: [Context]
         rs = getResult exprs contexts [(n + 1)..(2 * n)]
         (s1, d1, s2, d2) = getStats ctxs rs in do

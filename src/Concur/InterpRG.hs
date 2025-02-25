@@ -1,7 +1,7 @@
 module Concur.InterpRG where
 
 import SyntaxRG ( ExprRG, BoolRG(R, G) )
-import Concur.Effect ( ChannelM, ChannelT )
+import Concur.Effect ( ChannelT )
 import Control.Concurrent.STM ( STM )
 
 interpRG :: ExprRG -> ChannelT -> STM (Bool, Bool, Bool)
