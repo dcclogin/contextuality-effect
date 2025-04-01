@@ -67,8 +67,13 @@ executable contextuality-effect-exe
       ExprRGConcur
       ExprRGCont
       ExprRGState
+      Prototype0
+      Prototype00
       Prototype01
       Prototype02
+      Prototype1
+      Prototype2
+      Prototype3
       Paths_contextuality_effect
   autogen-modules:
       Paths_contextuality_effect
