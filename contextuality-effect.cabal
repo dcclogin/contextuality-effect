@@ -28,14 +28,12 @@ library
       Concur.ExperimentRG
       Concur.InterpRG
       Concur.ObservableRG
-      -- Cont.Effect
-      -- Cont.Experiment
-      -- Cont.ExperimentRG
-      -- Cont.Interp
-      -- Cont.InterpRG
-      -- Cont.Observable
-      -- Cont.ObservableRG
+      Cont.Effect
+      Cont.ExperimentRG
+      Cont.InterpRG
+      Cont.ObservableRG
       Lib
+      M
       State.Effect
       State.Experiment
       State.ExperimentRG
@@ -67,13 +65,16 @@ executable contextuality-effect-exe
   other-modules:
       Expr
       ExprRGConcur
+      ExprRGCont
       ExprRGState
+      Prototype01
+      Prototype02
       Paths_contextuality_effect
   autogen-modules:
       Paths_contextuality_effect
   hs-source-dirs:
       app
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       async
     , base >=4.7 && <5
@@ -92,7 +93,7 @@ test-suite contextuality-effect-test
       Paths_contextuality_effect
   hs-source-dirs:
       test
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       async
     , base >=4.7 && <5

@@ -1,7 +1,7 @@
 module ExprRGState where
 
 import SyntaxRG
-import State.ObservableRG3
+import State.ObservableRG2
 import State.ExperimentRG
 import System.Random
 
