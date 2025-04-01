@@ -14,9 +14,9 @@ Each detector has a switch which can be set in one of 3 different positions, so 
 
 The measurement scenario (following Abramsky's terminology, see [slides4](https://dcclogin.github.io/notes/slides4.pdf)) for this experiment is:
 
-$ X = {l_1, l_2, l_3, r_1, r_2, r_3} $
-$ M = {{l_1, r_1}, {l_1, r_2}, {l_1, r_3}, {l_2, r_1}, {l_2, r_2}, {l_2, r_3}, {l_3, r_1}, {l_3, r_2}, {l_3, r_3}} $
-$ O = {True, False} $
+$` X = {l_1, l_2, l_3, r_1, r_2, r_3} `$
+$` M = {{l_1, r_1}, {l_1, r_2}, {l_1, r_3}, {l_2, r_1}, {l_2, r_2}, {l_2, r_3}, {l_3, r_1}, {l_3, r_2}, {l_3, r_3}} `$
+$` O = {True, False} `$
 
 The set `X` enumerates all observables involved in the experiment, while the measurement cover `M` lists all possible combinations of compatible observables, and each combination counts as a valid measurement context. The set `O` contains all possible outcomes of a single measurement, and here it is either `True` or `False`.
 
