@@ -2,5 +2,5 @@ module State.Effect where
 
 import Control.Monad.State.Lazy
 
-type M = State Bool
-type M2 = State (Bool, Int)
+type M0 = State Bool
+type M = State (Bool, Int)

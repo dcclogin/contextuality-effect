@@ -1,13 +1,15 @@
 module State.ObservableRG3 where
 
 import SyntaxRG ( ExprRG, BoolRG(R, G) )
-import State.Effect ( M, M2 )
-import State.ExperimentRG ( Outcome )
+import State.Effect ( M )
 import State.InterpRG ( interpRG )
 import Control.Monad.State.Lazy ( MonadState(put, get) )
 
+type Outcome = Bool
+
 -- with one bit + a natural number (or 3 bits) for covert communication
-l1, l2, l3 :: ExprRG -> M2 Outcome
+-- by default, these observables can be interpreted as questions/predicates "is R?"
+l1, l2, l3 :: ExprRG -> M Outcome
 l1 e = do
     (b1, _, _) <- interpRG e
     (b, n) <- get
@@ -45,7 +47,7 @@ l3 e = do
     else
         return b3
 
-r1, r2, r3 :: ExprRG -> M2 Outcome
+r1, r2, r3 :: ExprRG -> M Outcome
 r1 = l1
 r2 = l2
 r3 = l3

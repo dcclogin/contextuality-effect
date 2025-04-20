@@ -8,14 +8,16 @@ To simplify the problem, we resort to a thought experiment proposed by David Mer
 
 The configuration of Mermin's experiment is quite simple:
 - A device C from where a bipartite quantum system emerges (2 particles are emitted from C to the opposite directions, left and right).
-- Two detectors, A and B, placed to the left and the right side of C respectively, flashing either red `R` or green `G` when a particle arrives. 
+- Two detectors, A and B, placed to the left and the right side of C respectively, flashing either red `R` or green `G` when a particle arrives.
 
 Each detector has a switch which can be set in one of 3 different positions, so there are in total 6 observables in 2 groups, left and right. Each group has 3 observables: `l1`,`l2`,`l3` for the left group, and `r1`,`r2`,`r3` for the right group.
 
 The measurement scenario (following Abramsky's terminology, see [slides4](https://dcclogin.github.io/notes/slides4.pdf)) for this experiment is:
 
 $` X = \{l_1, l_2, l_3, r_1, r_2, r_3\} `$
+
 $` M = \{\{l_1, r_1\}, \{l_1, r_2\}, \{l_1, r_3\}, \{l_2, r_1\}, \{l_2, r_2\}, \{l_2, r_3\}, \{l_3, r_1\}, \{l_3, r_2\}, \{l_3, r_3\}\} `$
+
 $` O = \{True, False\} `$
 
 The set `X` enumerates all observables involved in the experiment, while the measurement cover `M` lists all possible combinations of compatible observables, and each combination counts as a valid measurement context. The set `O` contains all possible outcomes of a single measurement, and here it is either `True` or `False`.
@@ -76,10 +78,27 @@ There is no way to reproduce the results of Mermin's experiment without any effe
 
 The most naive, but intuitive enough way is by introduing state monad.
 
+[TODO]
+
 ### Variant 2: concurrency
+
+[TODO]
 
 ### Variant 3: continuation monad / iterator
 
+[TODO]
+
 
 ## Speculative Ideas
+
+Single observable scenario: 
+- self-revealing concealment (nothing is hidden, except "nothing is hidden")
+- zero-level discursive exchange: question itself as the answer, receiving my own message in a reversed form
+- zero-level economic exchange: giving itself as receiving / gift
+- self-reflective move of including the observer's own subjective position into the series of observed phenomena
+- "I am always-already in the picture I see in the guise of a blind-spot"
+- motto of dialectics "Two divides into One" (not "Two unites into One"!)
+
+Metaphorical concepts:
+- sujet suppose savoir
 

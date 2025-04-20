@@ -1,86 +1,101 @@
+ {-# LANGUAGE UnicodeSyntax #-}
 module State.ExperimentRG where
 
 import SyntaxRG ( ExprRG, BoolRG )
-import State.Effect ( M, M2 )
+import State.Effect ( M )
+import State.ObservableRG3 ( l1, l2, l3, r1, r2, r3, Outcome )
 import System.Random ( random, randoms, mkStdGen, StdGen )
 import Control.Monad.State.Lazy ( evalState )
-
-type Outcome = Bool
 
 -- expression as quantum system
 type Qsystem = ExprRG
 -- test as single observable
-type Observable = Qsystem -> M2 Outcome
+type Observable = Qsystem -> M Outcome
 -- test suite as measurement context
-type Context = [Observable]
+type Context = (Observable, Observable)
 -- joint outcomes given a context
-type Experiment = Qsystem -> Context -> M2 [Outcome]
+type Experiment = Qsystem -> Context -> M (Outcome, Outcome)
 
 -- single observable outcome
-exp1 :: Qsystem -> Observable -> M2 Outcome
+exp1 :: Qsystem -> Observable -> M Outcome
 exp1 expr f = f expr
 
 -- joint outcomes of 2 observables
-exp2 :: Qsystem -> (Observable, Observable) -> M2 (Outcome, Outcome)
+exp2 :: Qsystem -> Context -> M (Outcome, Outcome)
 exp2 expr (f1, f2) = do
     o1 <- f1 expr
     o2 <- f2 expr
     return (o1, o2)
 
--- joint outcomes of 3 observables
-exp3 :: Qsystem 
-    -> (Observable, Observable, Observable) 
-    -> M2 (Outcome, Outcome, Outcome)
-exp3 expr (f1, f2, f3) = do
-    o1 <- f1 expr
-    o2 <- f2 expr
-    o3 <- f3 expr
-    return (o1, o2, o3)
+-- reify the computational effect per observable
+run1 :: Qsystem -> Observable -> Outcome
+run1 qState f =
+    let m = exp1 qState f in
+        evalState m (False, 0)
 
--- joint outcomes of 4 observables
-exp4 :: Qsystem
-    -> (Observable, Observable, Observable, Observable)
-    -> M2 (Outcome, Outcome, Outcome, Outcome)
-exp4 expr (f1, f2, f3, f4) = do
-    o1 <- f1 expr
-    o2 <- f2 expr
-    o3 <- f3 expr
-    o4 <- f4 expr
-    return (o1, o2, o3, o4)
-
--- generalized joint outcomes given a context (list) of observables
--- joint outcomes depends on the order of observables...
-expn :: Qsystem -> Context -> M2 [Outcome]
-expn expr [] = return []
-expn expr (f:fs) = do
-    o <- f expr
-    os <- expn expr fs
-    return (o:os)
-
--- joint outcomes given a list of context
-expnn :: Qsystem -> [Context] -> M2 [[Outcome]]
-expnn expr [] = return []
-expnn expr (c:cs) = do
-    os <- expn expr c
-    oss <- expnn expr cs
-    return (os:oss)
+-- reify the computational effect per context
+run2 :: Qsystem -> Context -> (Outcome, Outcome)
+run2 qState ctx =
+    let m = exp2 qState ctx in
+        evalState m (False, 0)
 
 
-randomBool :: Int -> (Bool, StdGen)
+-- contextual logical operators
+notc :: Observable -> Observable
+notc f = \qState -> do
+    o <- f qState
+    return (not o)
+
+(⨂) :: Observable -> Observable -> Observable
+f1 ⨂ f2 = \qState -> do
+    o1 <- f1 qState
+    o2 <- f2 qState
+    return (o1 && o2)
+
+(⨁) :: Observable -> Observable -> Observable
+f1 ⨁ f2 = \qState -> do
+    o1 <- f1 qState
+    o2 <- f2 qState
+    return (o1 || o2)
+
+-- non-contextual logical operators
+nots :: Observable -> Observable
+nots f = \qState -> do
+    let o = run1 qState f in
+        return (not o)
+
+(⨰) :: Observable -> Observable -> Observable
+f1 ⨰ f2 = \qState -> do
+    let o1 = run1 qState f1
+        o2 = run1 qState f2 in
+            return (o1 && o2)
+
+(∔) :: Observable -> Observable -> Observable
+f1 ∔ f2 = \qState -> do
+    let o1 = run1 qState f1
+        o2 = run1 qState f2 in
+            return (o1 || o2)
+
+tt, ff :: Observable
+tt = \_ -> return True
+ff = \_ -> return False
+
+
+p11, p12, p13 :: Observable
+p11 = (l1 ⨂ r1) ∔ (nots l1 ⨂ nots r1) // expected to be True 100% of the time
+p12 = (l1 ⨂ r2) ∔ (nots l1 ⨂ nots r2) // expected to be True 25% of the time
+p13 = (l1 ⨂ r3) ∔ (nots l1 ⨂ nots r3) // expected to be True 25% of the time
+
+
+{- randomBool :: Int -> (Bool, StdGen)
 randomBool seed = random (mkStdGen seed)
 
 randomBoolStream :: Int -> [Bool]
-randomBoolStream seed = randoms (mkStdGen seed)
+randomBoolStream seed = randoms (mkStdGen seed) -}
 
-type Seed = Int
+--type Seed = Int
 
--- reify the computational effect per context
-runContextS :: Qsystem -> Context -> Seed -> [Outcome]
-runContextS expr ctx seed =
-    let m = expn expr ctx in
-        evalState m (fst (randomBool seed), 0)
-
--- reify the computational effect per experiment
+{- -- reify the computational effect per experiment
 runExperimentS :: Qsystem -> [Context] -> Seed -> [[Outcome]]
 runExperimentS expr cs seed =
     let m = expnn expr cs in
@@ -92,4 +107,4 @@ runContextsS expr [] seed = []
 runContextsS expr (c:cs) seed =
     let os = runContextS expr c seed in
         let oss = runContextsS expr cs (seed + 1) in
-            (os:oss)
+            (os:oss) -}
