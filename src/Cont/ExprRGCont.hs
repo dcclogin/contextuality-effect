@@ -1,5 +1,6 @@
-module ExprRGCont where
+module Cont.ExprRGCont where
 
+import SyntaxRG
 import Cont.ObservableRG
 import Cont.ExperimentRG
 import System.Random (mkStdGen, randomRs)

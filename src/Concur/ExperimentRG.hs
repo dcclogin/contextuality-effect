@@ -7,7 +7,6 @@ import Control.Concurrent.Async ( concurrently )
 import Control.Concurrent.STM.TVar ( newTVarIO )
 import System.Random ( random, StdGen, mkStdGen )
 
-type Outcome = Bool
 type Qsystem = ExprRG
 type Observable = Qsystem -> ChannelT -> STM Outcome
 -- temporarily fix the number of observables to 2

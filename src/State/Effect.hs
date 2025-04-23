@@ -1,6 +1,7 @@
 module State.Effect where
 
+import SyntaxRG
 import Control.Monad.State.Lazy
 
-type M0 = State Bool
-type M = State (Bool, Int)
+type M = State (RGU, Position)
+type MU = State ExprRGU

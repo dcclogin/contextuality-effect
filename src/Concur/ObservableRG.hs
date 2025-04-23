@@ -1,9 +1,8 @@
 module Concur.ObservableRG where
 
-import SyntaxRG ( ExprRG )
+import SyntaxRG ( ExprRG, Outcome )
 import Concur.Effect ( ChannelT )
 import Concur.InterpRG ( interpRG )
-import Concur.ExperimentRG ( Outcome )
 import Control.Concurrent.STM ( STM, writeTVar, readTVar )
 
 

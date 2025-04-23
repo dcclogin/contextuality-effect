@@ -1,11 +1,11 @@
 module Main (main) where
 
-import ExprRGConcur
-import ExprRGCont
-import ExprRGState
+import State.ExprRGState
+import Concur.ExprRGConcur
+import Cont.ExprRGCont
 
 main :: IO ()
 main = do
-    ExprRGState.printRun 10000 77777
-    ExprRGConcur.printRun 10000 88888
-    ExprRGCont.printRun 10000 99999
+    State.ExprRGState.printRun 10000 77776
+    Concur.ExprRGConcur.printRun 10000 88888
+    Cont.ExprRGCont.printRun 10000 99999

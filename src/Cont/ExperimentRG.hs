@@ -4,7 +4,6 @@ import SyntaxRG
 import Cont.Effect
 import System.Random ( random, StdGen, mkStdGen )
 
-type Outcome = Bool
 type Qsystem = ExprRG
 type Observable = Qsystem -> Iterator (Bool, Int) (Bool, Int) Outcome
 type Context = (Observable, Observable)

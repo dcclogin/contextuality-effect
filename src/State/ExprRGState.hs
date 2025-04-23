@@ -1,23 +1,9 @@
-module ExprRGState where
+module State.ExprRGState where
 
 import SyntaxRG
-import State.ObservableRG3
+import State.ObservableRG
 import State.ExperimentRG
 import System.Random
-
--- generate a random ExprRG "instruction set" (R/G,R/G,R/G)
-genQState :: StdGen -> Qsystem
-genQState gen =
-    let (b1, g1) = random gen
-        (b2, g2) = random g1
-        (b3, _)  = random g2
-    in (if b1 then R else G, if b2 then R else G, if b3 then R else G)
-
--- generate n random ExprRGs
-genQStates :: Int -> [Qsystem]
-genQStates 0 = []
-genQStates n = genQState gen : genQStates (n - 1)
-    where gen = mkStdGen (n + 77777)
 
 data Ctx = Ctx11 | Ctx12 | Ctx13 | Ctx21 | Ctx22 | Ctx23 | Ctx31 | Ctx32 | Ctx33
     deriving (Show, Eq, Enum)
@@ -68,7 +54,7 @@ getStats (c:cs) (r:rs) =
 
 printRun :: Int -> Int -> IO ()
 printRun n seed = do 
-    let exprs = genQStates n :: [Qsystem]
+    let exprs = genQStates n (mkStdGen 101) :: [Qsystem]
         ctxs = randomListPure n ctxCollection seed :: [Ctx]
         contexts = map getContext ctxs :: [Context]
         rs = getResult exprs contexts

@@ -26,24 +26,24 @@ library
   exposed-modules:
       Concur.Effect
       Concur.ExperimentRG
+      Concur.ExprRGConcur
       Concur.InterpRG
       Concur.ObservableRG
       Cont.Effect
       Cont.ExperimentRG
+      Cont.ExprRGCont
       Cont.InterpRG
       Cont.ObservableRG
       Lib
       M
+      Pure.ExperimentRG
+      Pure.ObservableRG
+      RandomUtils
       State.Effect
-      State.Experiment
       State.ExperimentRG
-      State.Interp
+      State.ExprRGState
       State.InterpRG
-      State.Observable
       State.ObservableRG
-      State.ObservableRG2
-      State.ObservableRG3
-      Syntax
       SyntaxRG
   other-modules:
       Paths_contextuality_effect
@@ -63,15 +63,6 @@ library
 executable contextuality-effect-exe
   main-is: Main.hs
   other-modules:
-      Expr
-      ExprRGConcur
-      ExprRGCont
-      ExprRGState
-      Prototype0
-      Prototype00
-      Prototype01
-      Prototype1
-      Prototype3
       Paths_contextuality_effect
   autogen-modules:
       Paths_contextuality_effect

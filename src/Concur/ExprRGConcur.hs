@@ -1,5 +1,6 @@
-module ExprRGConcur where
+module Concur.ExprRGConcur where
 
+import SyntaxRG
 import Concur.ObservableRG
 import Concur.ExperimentRG
 import System.Random (mkStdGen, randomRs)

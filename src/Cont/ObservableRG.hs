@@ -1,9 +1,8 @@
 module Cont.ObservableRG where
 
-import SyntaxRG ( ExprRG )
+import SyntaxRG ( ExprRG, Outcome )
 import Cont.Effect
 import Cont.InterpRG
-import Cont.ExperimentRG ( Outcome )
 import Control.Monad.Cont
 
 

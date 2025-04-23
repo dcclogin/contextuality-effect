@@ -1,6 +1,6 @@
 module State.ObservableRG2 where
 
-import SyntaxRG ( ExprRG, BoolRG(R, G) )
+import SyntaxRG ( ExprRG, RG(R, G) )
 import State.Effect ( M )
 import State.InterpRG ( interpRG )
 import Control.Monad.State.Lazy ( MonadState(put, get) )
