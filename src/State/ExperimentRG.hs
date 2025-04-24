@@ -118,6 +118,8 @@ psc ctx qState = do
 -- what about "is not same color?"
 -- how to make these predicates more compositional?
 
+type Query = (Outcome, Outcome) -> M Outcome
+
 psc :: Context -> Qsystem -> M Outcome
 psc ctx qState =
     let m = exp2 qState ctx in
@@ -148,45 +150,3 @@ runContextsS expr (c:cs) seed =
             (os:oss) -}
 
 
--- generate a random color R/G
-genColor :: StdGen -> (RG, StdGen)
-genColor gen =
-    let (b, g) = random gen in 
-        if b then (R, g) else (G, g)
-
--- generate a random ExprRG "instruction set" (RG, RG, RG)
-genQState :: StdGen -> (Qsystem, StdGen)
-genQState gen =
-    let (c1, g1) = genColor gen
-        (c2, g2) = genColor g1
-        (c3, g3) = genColor g2 
-    in ((c1, c2, c3), g3)
-
--- generate a random switch position S1/S2/S3
-genPos :: StdGen -> (Position, StdGen)
-genPos gen =
-    let (n, g) = randomR (0 :: Int, 2) gen in
-        case n of
-            0 -> (S1, g)
-            1 -> (S2, g)
-            2 -> (S3, g)
-            _ -> error "impossible."
-
--- generate a random configuration (a pair of switch positions)
-genConfig :: StdGen -> (Config, StdGen)
-genConfig gen =
-    let (pos1, g1) = genPos gen
-        (pos2, g2) = genPos g1
-    in ((pos1, pos2), g2)
-
--- generate n random ExprRGs
-genQStates :: Int -> StdGen -> [Qsystem]
-genQStates 0 gen = []
-genQStates n gen = let (e, g) = genQState gen in
-    e : genQStates (n - 1) g
-
--- generate n random configurations
-genConfigs :: Int -> StdGen -> [Config]
-genConfigs 0 gen = []
-genConfigs n gen = let (c, g) = genConfig gen in
-    c : genConfigs (n - 1) g

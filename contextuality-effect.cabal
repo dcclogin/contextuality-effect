@@ -42,7 +42,6 @@ library
       State.Effect
       State.ExperimentRG
       State.ExprRGState
-      State.InterpRG
       State.ObservableRG
       SyntaxRG
   other-modules:

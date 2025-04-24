@@ -1,15 +1,29 @@
 module State.ExprRGState where
 
 import SyntaxRG
+import RandomUtils
 import State.ObservableRG
 import State.ExperimentRG
 import System.Random
+import Control.Monad.State.Lazy ( evalState )
 
 data Ctx = Ctx11 | Ctx12 | Ctx13 | Ctx21 | Ctx22 | Ctx23 | Ctx31 | Ctx32 | Ctx33
     deriving (Show, Eq, Enum)
 
 ctxCollection :: [Ctx]
 ctxCollection = [Ctx11 ..]
+
+configToContext :: Config -> Context
+configToContext config = case config of
+    (S1, S1) -> (l1, r1)
+    (S1, S2) -> (l1, r2)
+    (S1, S3) -> (l1, r3)
+    (S2, S1) -> (l2, r1)
+    (S2, S2) -> (l2, r2)
+    (S2, S3) -> (l2, r3)
+    (S3, S1) -> (l3, r1)
+    (S3, S2) -> (l3, r2)
+    (S3, S3) -> (l3, r3)
 
 getContext :: Ctx -> Context
 getContext ctx = case ctx of
@@ -28,6 +42,30 @@ randomListPure :: Int -> [a] -> Int -> [a]
 randomListPure n xs seed =
     let indices = take n $ randomRs (0, length xs - 1) (mkStdGen seed)
     in map (xs !!) indices
+
+-- execute with the record of the configuration/context
+exec :: Qsystem -> Config -> (Config, (Outcome, Outcome))
+exec qState config = 
+    let ctx = configToContext config
+        res = run2 qState ctx
+    in (config, res)
+
+-- multiple executions with records
+execl :: [Qsystem] -> [Config] -> [(Config, (Outcome, Outcome))]
+execl es cs = zipWith exec es cs
+
+-- execute with one customized question (regarding original outcomes)
+execq :: Query -> Qsystem -> Config -> (Config, Outcome)
+execq query qState config =
+    let ctx = configToContext config
+        m = exp2 qState ctx >>= query
+        res = evalState m (Nothing, S1)
+    in (config, res)
+
+-- multiple executions with records
+execql :: Query -> [Qsystem] -> [Config] -> [(Config, Outcome)]
+execql query es cs = zipWith (execq query) es cs
+
 
 getResult :: [Qsystem] -> [Context] -> [(Outcome, Outcome)]
 getResult es cs = zipWith run2 es cs
@@ -54,7 +92,7 @@ getStats (c:cs) (r:rs) =
 
 printRun :: Int -> Int -> IO ()
 printRun n seed = do 
-    let exprs = genQStates n (mkStdGen 101) :: [Qsystem]
+    let exprs = (fst (genExprRGs n (mkStdGen 101))) :: [Qsystem]
         ctxs = randomListPure n ctxCollection seed :: [Ctx]
         contexts = map getContext ctxs :: [Context]
         rs = getResult exprs contexts

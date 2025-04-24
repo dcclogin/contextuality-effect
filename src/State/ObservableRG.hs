@@ -5,8 +5,7 @@ import State.Effect ( M )
 import Control.Monad.State.Lazy ( MonadState(put, get) )
 
 
--- with one bit + a natural number (or 3 bits) for covert communication
--- by default, these observables can be interpreted as questions/predicates "is R?"
+-- these observables can be interpreted as questions/predicates "is R?"
 l1, l2, l3 :: ExprRG -> M Outcome
 l1 (c1, _, _) = do
     (color, pos) <- get

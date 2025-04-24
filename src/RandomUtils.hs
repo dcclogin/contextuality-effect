@@ -3,6 +3,9 @@ module RandomUtils where
 import System.Random
 import SyntaxRG
 
+-- presupposition: consecutively generated values are independent
+-- in the end we can wire up all "randoms" with one input generator
+
 -- generate a random color R/G
 genColor :: StdGen -> (RG, StdGen)
 genColor gen =
@@ -19,7 +22,7 @@ genColorU gen =
             2 -> (Just G, g)
             _ -> error "impossible."
 
--- generate a random ExprRG "instruction set" (RG, RG, RG)
+-- generate a random ExprRG (RG, RG, RG) "instruction set"
 genExprRG :: StdGen -> (ExprRG, StdGen)
 genExprRG gen =
     let (c1, g1) = genColor gen
@@ -53,19 +56,45 @@ genConfig gen =
     in ((pos1, pos2), g2)
 
 -- generate n random ExprRGs
-genExprRGs :: Int -> StdGen -> [ExprRG]
-genExprRGs 0 gen = []
-genExprRGs n gen = let (e, g) = genExprRG gen in
-    e : genExprRGs (n - 1) g
+genExprRGs :: Int -> StdGen -> ([ExprRG], StdGen)
+genExprRGs 0 gen = ([], gen)
+genExprRGs n gen = 
+    let (e, g) = genExprRG gen in
+        let (es, g') = genExprRGs (n - 1) g in
+            (e:es, g')
 
 -- generate n random ExprRGUs
-genExprRGUs :: Int -> StdGen -> [ExprRGU]
-genExprRGUs 0 gen = []
-genExprRGUs n gen = let (e, g) = genExprRGU gen in
-    e : genExprRGUs (n - 1) g
+genExprRGUs :: Int -> StdGen -> ([ExprRGU], StdGen)
+genExprRGUs 0 gen = ([], gen)
+genExprRGUs n gen = 
+    let (e, g) = genExprRGU gen in
+        let (es, g') = genExprRGUs (n - 1) g in
+            (e:es, g')
 
 -- generate n random configurations
-genConfigs :: Int -> StdGen -> [Config]
-genConfigs 0 gen = []
-genConfigs n gen = let (c, g) = genConfig gen in
-    c : genConfigs (n - 1) g
+genConfigs :: Int -> StdGen -> ([Config], StdGen)
+genConfigs 0 gen = ([], gen)
+genConfigs n gen = 
+    let (c, g) = genConfig gen in
+        let (cs, g') = genConfigs (n - 1) g in
+            (c:cs, g')
+
+
+-- generate True with probability n/m
+genTrue :: Int -> Int -> StdGen -> (Bool, StdGen)
+genTrue n m gen =
+    let (x, g) = randomR (0 :: Int, m - 1) gen in
+        if x < n then (True, g) else (False, g)
+
+-- generate True with probability abs(cos(θ))
+genTrueCos :: Double -> StdGen -> (Bool, StdGen)
+genTrueCos theta gen =
+    let (x, g) = randomR (0 :: Double, 1) gen in
+        if x < abs (cos theta) then (True, g) else (False, g)
+
+-- generate True with probability abs(sin(θ))
+genTrueSin :: Double -> StdGen -> (Bool, StdGen)
+genTrueSin theta gen =
+    let (x, g) = randomR (0 :: Double, 1) gen in
+        if x < abs (sin theta) then (True, g) else (False, g)
+
