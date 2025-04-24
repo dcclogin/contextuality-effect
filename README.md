@@ -102,3 +102,6 @@ Single observable scenario:
 Metaphorical concepts:
 - sujet suppose savoir
 
+Related:
+- Quantum states as programs, observables as tests / static analyzers => Contextuality as bugs, bugs as features!
+
