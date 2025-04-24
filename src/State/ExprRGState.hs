@@ -7,11 +7,6 @@ import State.ExperimentRG
 import System.Random
 import Control.Monad.State.Lazy ( evalState )
 
-data Ctx = Ctx11 | Ctx12 | Ctx13 | Ctx21 | Ctx22 | Ctx23 | Ctx31 | Ctx32 | Ctx33
-    deriving (Show, Eq, Enum)
-
-ctxCollection :: [Ctx]
-ctxCollection = [Ctx11 ..]
 
 configToContext :: Config -> Context
 configToContext config = case config of
@@ -24,24 +19,6 @@ configToContext config = case config of
     (S3, S1) -> (l3, r1)
     (S3, S2) -> (l3, r2)
     (S3, S3) -> (l3, r3)
-
-getContext :: Ctx -> Context
-getContext ctx = case ctx of
-    Ctx11 -> (l1, r1)
-    Ctx12 -> (l1, r2)
-    Ctx13 -> (l1, r3)
-    Ctx21 -> (l2, r1)
-    Ctx22 -> (l2, r2)
-    Ctx23 -> (l2, r3)
-    Ctx31 -> (l3, r1)
-    Ctx32 -> (l3, r2)
-    Ctx33 -> (l3, r3)
-
-
-randomListPure :: Int -> [a] -> Int -> [a]
-randomListPure n xs seed =
-    let indices = take n $ randomRs (0, length xs - 1) (mkStdGen seed)
-    in map (xs !!) indices
 
 -- execute with the record of the configuration/context
 exec :: Qsystem -> Config -> (Config, (Outcome, Outcome))
@@ -66,39 +43,37 @@ execq query qState config =
 execql :: Query -> [Qsystem] -> [Config] -> [(Config, Outcome)]
 execql query es cs = zipWith (execq query) es cs
 
+-- predicates of experiment records
+type Pred1O = (Config, Outcome) -> Bool
+type Pred2O = (Config, (Outcome, Outcome)) -> Bool
 
-getResult :: [Qsystem] -> [Context] -> [(Outcome, Outcome)]
-getResult es cs = zipWith run2 es cs
+-- [s]ame [p]osition, [s]ame [o]utcome
+-- [s]ame [p]osition, [d]ifferent [o]utcome
+-- [d]ifferent [p]osition, [s]ame [o]utcome
+-- [d]ifferent [p]osition, [d]ifferent [o]utcome
+spso, spdo, dpso, dpdo :: Pred2O
+spso = \((pos1, pos2), (o1, o2)) -> (pos1 == pos2 && o1 == o2)
+spdo = \((pos1, pos2), (o1, o2)) -> (pos1 == pos2 && o1 /= o2)
+dpso = \((pos1, pos2), (o1, o2)) -> (pos1 /= pos2 && o1 == o2)
+dpdo = \((pos1, pos2), (o1, o2)) -> (pos1 /= pos2 && o1 /= o2)
 
--- get statistics
--- group (1) ctx11, ctx22, ctx33: 1,5,9
---   - TT/FF 100%
---   - TF/FT 0%
--- group (2) the rest: 2,3,4,6,7,8
---   - TT/FF ??%
---   - TF/FT ??%
+-- traverse the list of records 4 times!!
+allStats :: [(Config, (Outcome, Outcome))] -> (Int, Int, Int, Int)
+allStats rs =
+    let n1 = length $ filter spso rs
+        n2 = length $ filter spdo rs
+        n3 = length $ filter dpso rs
+        n4 = length $ filter dpdo rs
+    in (n1, n2, n3, n4)
 
-getStats :: [Ctx] -> [(Outcome, Outcome)] -> (Int, Int, Int, Int)
-getStats [] [] = (0, 0, 0, 0)
-getStats (c:cs) (r:rs) = 
-    let (s1, d1, s2, d2) = getStats cs rs
-    in if c == Ctx11 || c == Ctx22 || c == Ctx33
-        then if r == (True, True) || r == (False, False)
-            then (s1 + 1, d1, s2, d2)
-            else (s1, d1 + 1, s2, d2)
-        else if r == (True, True) || r == (False, False)
-            then (s1, d1, s2 + 1, d2)
-            else (s1, d1, s2, d2 + 1)
-
-printRun :: Int -> Int -> IO ()
-printRun n seed = do 
-    let exprs = (fst (genExprRGs n (mkStdGen 101))) :: [Qsystem]
-        ctxs = randomListPure n ctxCollection seed :: [Ctx]
-        contexts = map getContext ctxs :: [Context]
-        rs = getResult exprs contexts
-        (s1, d1, s2, d2) = getStats ctxs rs in do
-            putStrLn "\nMeasurement results (State):"
-            print $ "RR/GG for Ctx11, Ctx22, Ctx33: " ++ show s1
-            print $ "RG/GR for Ctx11, Ctx22, Ctx33: " ++ show d1
-            print $ "RR/GG for Ctx12, Ctx13, Ctx21, Ctx23, Ctx31, Ctx32: " ++ show s2
-            print $ "RG/GR for Ctx12, Ctx13, Ctx21, Ctx23, Ctx31, Ctx32: " ++ show d2
+runExperiment :: Int -> StdGen -> IO ()
+runExperiment n gen = do
+    let (es, g) = genExprRGs n gen
+        (cs, _) = genConfigs n g
+        (s1, d1, s2, d2) = allStats (execl es cs) in do
+            putStrLn "\nMeasurement results (State)"
+            putStrLn $ "{XX (pos1 == pos2, 3)} {RR,GG}: " ++ show s1
+            putStrLn $ "{XX (pos1 == pos2, 3)} {RG,GR}: " ++ show d1
+            putStrLn $ "{XY (pos1 != pos2, 6)} {RR,GG}: " ++ show s2
+            putStrLn $ "{XY (pos1 != pos2, 6)} {RG,GR}: " ++ show d2
+            putStrLn $ "Total number of records: " ++ show n
