@@ -1,7 +1,9 @@
 module State.Effect where
 
 import SyntaxRG
-import Control.Monad.State.Lazy
+import System.Random (StdGen)
+import Control.Monad.State.Lazy (State)
 
-type M = State (RGU, Position)
-type MU = State ExprRGU
+-- alternative probably: nested state monad, StdGen as argument
+type M = State (RGU, Position, StdGen)
+type MU = State (ExprRGU, StdGen)

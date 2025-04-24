@@ -5,7 +5,7 @@ import SyntaxRG
 import System.Random
 import State.Effect ( M )
 import State.ObservableRG ( l1, l2, l3, r1, r2, r3 )
-import Control.Monad.State.Lazy ( evalState )
+import Control.Monad.State.Lazy ( evalState, runState )
 
 -- expression as quantum system
 type Qsystem = ExprRG
@@ -28,19 +28,21 @@ exp2 qState (f1, f2) = do
     return (o1, o2)
 
 -- reify the computational effect per observable
-run1 :: Qsystem -> Observable -> Outcome
-run1 qState f =
-    let m = exp1 qState f in
-        evalState m (Nothing, S1)
+run1 :: StdGen -> Qsystem -> Observable -> (Outcome, StdGen)
+run1 gen qState f =
+    let m = exp1 qState f
+        (val, (_, _, g)) = runState m (Nothing, S1, gen)
+    in (val, g)
 
 -- reify the computational effect per context
-run2 :: Qsystem -> Context -> (Outcome, Outcome)
-run2 qState ctx =
-    let m = exp2 qState ctx in
-        evalState m (Nothing, S1)
+run2 :: StdGen -> Qsystem -> Context -> ((Outcome, Outcome), StdGen)
+run2 gen qState ctx =
+    let m = exp2 qState ctx
+        (val, (_, _, g)) = runState m (Nothing, S1, gen)
+    in (val, g)
 
 
--- contextual logical operators (?)
+{- -- contextual logical operators (?)
 notc :: Observable -> Observable
 notc f = \qState -> do
     o <- f qState
@@ -85,7 +87,7 @@ ff = \_ -> return False
 p11, p12, p13 :: Observable
 p11 = (l1 ⨂ r1) ∔ (nots l1 ⨂ nots r1) -- expected to be True 100% of the time
 p12 = (l1 ⨂ r2) ∔ (nots l1 ⨂ nots r2) -- expected to be True 25% of the time
-p13 = (l1 ⨂ r3) ∔ (nots l1 ⨂ nots r3) -- expected to be True 25% of the time
+p13 = (l1 ⨂ r3) ∔ (nots l1 ⨂ nots r3) -- expected to be True 25% of the time -}
 
 
 

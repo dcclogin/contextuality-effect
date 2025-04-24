@@ -21,27 +21,31 @@ configToContext config = case config of
     (S3, S3) -> (l3, r3)
 
 -- execute with the record of the configuration/context
-exec :: Qsystem -> Config -> (Config, (Outcome, Outcome))
-exec qState config = 
+exec :: StdGen -> Qsystem -> Config -> ((Config, (Outcome, Outcome)), StdGen)
+exec gen qState config = 
     let ctx = configToContext config
-        res = run2 qState ctx
-    in (config, res)
+        (res, g) = run2 gen qState ctx
+    in ((config, res), g)
 
 -- multiple executions with records
-execl :: [Qsystem] -> [Config] -> [(Config, (Outcome, Outcome))]
-execl es cs = zipWith exec es cs
+execl :: StdGen -> [Qsystem] -> [Config] -> ([(Config, (Outcome, Outcome))], StdGen)
+execl gen [] _ = ([], gen)
+execl gen (e:es) (c:cs) =
+    let (r, g1) = exec gen e c
+        (rs, g2) = execl g1 es cs
+    in (r:rs, g2)
 
--- execute with one customized question (regarding original outcomes)
+{- -- execute with one customized question (regarding original outcomes)
 execq :: Query -> Qsystem -> Config -> (Config, Outcome)
 execq query qState config =
     let ctx = configToContext config
         m = exp2 qState ctx >>= query
-        res = evalState m (Nothing, S1)
+        res = evalState m (Nothing, S1, gen)
     in (config, res)
 
 -- multiple executions with records
 execql :: Query -> [Qsystem] -> [Config] -> [(Config, Outcome)]
-execql query es cs = zipWith (execq query) es cs
+execql query es cs = zipWith (execq query) es cs -}
 
 -- predicates of experiment records
 type Pred1O = (Config, Outcome) -> Bool
@@ -68,9 +72,10 @@ allStats rs =
 
 runExperiment :: Int -> StdGen -> IO ()
 runExperiment n gen = do
-    let (es, g) = genExprRGs n gen
-        (cs, _) = genConfigs n g
-        (s1, d1, s2, d2) = allStats (execl es cs) in do
+    -- "eager generation"
+    let (es, g1) = genExprRGs n gen
+        (cs, g2) = genConfigs n g1
+        (s1, d1, s2, d2) = allStats (fst (execl g2 es cs)) in do
             putStrLn "\nMeasurement results (State)"
             putStrLn $ "{XX (pos1 == pos2, 3)} {RR,GG}: " ++ show s1
             putStrLn $ "{XX (pos1 == pos2, 3)} {RG,GR}: " ++ show d1
