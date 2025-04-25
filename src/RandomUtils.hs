@@ -79,7 +79,6 @@ genConfigs n gen =
         let (cs, g') = genConfigs (n - 1) g in
             (c:cs, g')
 
-
 -- generate True with probability n/m
 genTrue :: Int -> Int -> StdGen -> (Bool, StdGen)
 genTrue n m gen =
