@@ -12,10 +12,12 @@ data PosL = L1 | L2 | L3
 data PosR = R1 | R2 | R3
     deriving (Show, Eq)
 
--- alias: <simple> observable
+-- alias: <simple> observable. PosL + PosR
 type Observable = Either PosL PosR
+-- alias: configuration. PosL × PosR
+type Context = (PosL, PosR)
 
--- alias: <compound> measurement, boolean algebra
+-- alias: <compound> measurement, (partial) boolean algebra
 data Question = FF | TT
     | LL PosL | RR PosR
     | Not Question 
@@ -70,12 +72,22 @@ isCommeasurable q1 q2 =
 -- <locality>
 -- <non-contextuality>
 
+-- classical source: equally distributed
+csource :: StdGen -> ((HiddenVar, HiddenVar), StdGen)
+csource gen = let (hvar, g) = genExprRG gen in 
+    ((hvar, hvar), g)
+
+-- [TODO] classical source: never generate (R, R, R) or (G, G, G)
+
+-- particle to be received by detector A (left)
 csyssL :: HiddenVar -> (PosL -> Outcome)
 csyssL (a1, a2, a3) = \l ->
     case l of
         L1 -> (a1 == R)
         L2 -> (a2 == R)
         L3 -> (a3 == R)
+
+-- particle to be received by detector B (right)
 csyssR :: HiddenVar -> (PosR -> Outcome)
 csyssR (b1, b2, b3) = \r ->
     case r of
@@ -83,26 +95,81 @@ csyssR (b1, b2, b3) = \r ->
         R2 -> (b2 == R)
         R3 -> (b3 == R)
 
-(⊠) :: (HiddenVar -> (a -> Outcome)) 
+(⊞) :: (HiddenVar -> (a -> Outcome)) 
     -> (HiddenVar -> (b -> Outcome)) 
     -> (HiddenVar, HiddenVar) -> (Either a b -> Outcome)
-f ⊠ g = \(hvarL, hvarR) -> \obs ->
+f ⊞ g = \(hvarL, hvarR) -> \obs ->
     case obs of
         Left l -> f hvarL l
         Right r -> g hvarR r
 
--- <tensor product> of csyssL and csyssR
+(⊠) :: (HiddenVar -> (PosL -> Outcome)) 
+    -> (HiddenVar -> (PosR -> Outcome)) 
+    -> (HiddenVar, HiddenVar) -> (Context -> (Outcome, Outcome))
+f ⊠ g = \(hvarL, hvarR) -> \(l, r) ->
+    (f hvarL l, g hvarR r)
+
 csyss :: (HiddenVar, HiddenVar) -> SystemCs
 csyss = csyssL ⊠ csyssR
 
+-- [TODO] csys
+-- csys is a partial Boolean Algebra with
+-- 6 variables {L1, L2, L3, R1, R2, R3} and a binary relation ⊙ <commesurable>
+csys :: (HiddenVar, HiddenVar) -> SystemC
+csys (hvarL, hvarR) = \q ->
+    case q of
+        FF -> False
+        TT -> True
+        LL l -> csyssL hvarL l
+        RR r -> csyssR hvarR r
+        Not q' -> not (csys (hvarL, hvarR) q')
+        And q1 q2 | isCommeasurable q1 q2 ->
+            csys (hvarL, hvarR) q1 && csys (hvarL, hvarR) q2
+        Or q1 q2 | isCommeasurable q1 q2 ->
+            csys (hvarL, hvarR) q1 || csys (hvarL, hvarR) q2
+        _ -> error "invalid question"
 
 
--- [TODO] qsyss
+-- single trial of the experiment
+evalC :: StdGen -> Context -> ((Outcome, Outcome), StdGen)
+evalC gen (l, r) =
+    let ((hvarL, hvarR), g) = csource gen
+        ol = csyss (hvarL, hvarR) (Left l)
+        or = csyss (hvarL, hvarR) (Right r) 
+    in ((ol, or), g)
+
+-- extensionally equivalent to evalC
+evalC' :: StdGen -> Context -> ((Outcome, Outcome), StdGen)
+evalC' gen (l, r) =
+    let ((hvarL, hvarR), g) = csource gen
+        ol = csyssL hvarL l
+        or = csyssR hvarR r 
+    in ((ol, or), g)
+
+
+
+
+
+
+
+
+
+
+
+
 -- nonlocal hidden variable
+-- [TODO] abstract away the <protocol>
 
+-- quantum source: no intrinsic, preexisting properties!
+qsource :: (HiddenVarU, HiddenVarU)
+qsource = let hvar = (Nothing, Nothing, Nothing) in
+    (hvar, hvar)
+
+-- randomly roll R or G with equal probability
 roll :: StdGen -> MU (RG, StdGen)
 roll gen = return (genColor gen)
 
+-- particle to be received by detector A (left)
 qsyssL :: PosL -> MU Outcome
 qsyssL L1 = do
     (hvar, gen) <- get
@@ -180,6 +247,7 @@ qsyssL L3 = do
                     return (v3' == R)
                 _ -> error "internal error: impossible state in qsyssL"
 
+-- particle to be received by detector B (right)
 qsyssR :: PosR -> MU Outcome
 qsyssR R1 = qsyssL L1
 qsyssR R2 = qsyssL L2
@@ -198,10 +266,6 @@ qsyss :: SystemQs
 qsyss = qsyssL ⊗ qsyssR
 
 
-
--- [TODO] csys
--- csys is a partial Boolean Algebra with
--- 6 variables {L1, L2, L3, R1, R2, R3} and a binary relation ⊙ <commesurable>
 
 
 -- [TODO] qsys
