@@ -1,3 +1,4 @@
+{-# LANGUAGE UnicodeSyntax #-}
 module State.InterpRG where
 
 import SyntaxRG ( RG(R, G), RGU, Outcome )
@@ -68,29 +69,133 @@ isCommeasurable q1 q2 =
 -- <determinism>
 -- <locality>
 -- <non-contextuality>
-csyss :: (HiddenVar, HiddenVar) -> SystemCs
-csyss ((a1, a2, a3), (b1, b2, b3)) = \obs ->
+
+csyssL :: HiddenVar -> (PosL -> Outcome)
+csyssL (a1, a2, a3) = \l ->
+    case l of
+        L1 -> (a1 == R)
+        L2 -> (a2 == R)
+        L3 -> (a3 == R)
+csyssR :: HiddenVar -> (PosR -> Outcome)
+csyssR (b1, b2, b3) = \r ->
+    case r of
+        R1 -> (b1 == R)
+        R2 -> (b2 == R)
+        R3 -> (b3 == R)
+
+(⊠) :: (HiddenVar -> (a -> Outcome)) 
+    -> (HiddenVar -> (b -> Outcome)) 
+    -> (HiddenVar, HiddenVar) -> (Either a b -> Outcome)
+f ⊠ g = \(hvarL, hvarR) -> \obs ->
     case obs of
-        Left L1 -> (a1 == R)
-        Left L2 -> (a2 == R)
-        Left L3 -> (a3 == R)
-        Right R1 -> (b1 == R)
-        Right R2 -> (b2 == R)
-        Right R3 -> (b3 == R)
+        Left l -> f hvarL l
+        Right r -> g hvarR r
+
+-- <tensor product> of csyssL and csyssR
+csyss :: (HiddenVar, HiddenVar) -> SystemCs
+csyss = csyssL ⊠ csyssR
+
 
 
 -- [TODO] qsyss
 -- nonlocal hidden variable
-qsyss :: SystemQs
-qsyss obs = do
-    ((x1, x2, x3), gen) <- get
+
+roll :: StdGen -> MU (RG, StdGen)
+roll gen = return (genColor gen)
+
+qsyssL :: PosL -> MU Outcome
+qsyssL L1 = do
+    (hvar, gen) <- get
+    case hvar of
+        (Just v1, _, _) -> return (v1 == R)
+        (Nothing, x2, x3) -> do
+            (v1, g) <- roll gen -- roll an answer according to the protocol
+            case (x2, x3) of
+                (Nothing, Nothing) -> do
+                    put ((Just v1, x2, x3), g)
+                    return (v1 == R)
+                (Just v2, Nothing) | v2 /= v1 -> do
+                    put ((Just v1, x2, x3), g)
+                    return (v1 == R)
+                (Just v2, Nothing) | v2 == v1 -> do
+                    (v1', g') <- roll g -- reroll an answer
+                    put ((Just v1', x2, x3), g')
+                    return (v1' == R)
+                (Nothing, Just v3) | v3 /= v1 -> do
+                    put ((Just v1, x2, x3), g)
+                    return (v1 == R)
+                (Nothing, Just v3) | v3 == v1 -> do
+                    (v1', g') <- roll g -- reroll an answer
+                    put ((Just v1', x2, x3), g')
+                    return (v1' == R)
+                _ -> error "internal error: impossible state in qsyssL"
+qsyssL L2 = do
+    (hvar, gen) <- get
+    case hvar of
+        (_, Just v2, _) -> return (v2 == R)
+        (x1, Nothing, x3) -> do
+            (v2, g) <- roll gen -- roll an answer according to the protocol
+            case (x1, x3) of
+                (Nothing, Nothing) -> do
+                    put ((x1, Just v2, x3), g)
+                    return (v2 == R)
+                (Just v1, Nothing) | v1 /= v2 -> do
+                    put ((x1, Just v2, x3), g)
+                    return (v2 == R)
+                (Just v1, Nothing) | v1 == v2 -> do
+                    (v2', g') <- roll g -- reroll an answer
+                    put ((x1, Just v2', x3), g')
+                    return (v2' == R)
+                (Nothing, Just v3) | v3 /= v2 -> do
+                    put ((x1, Just v2, x3), g)
+                    return (v2 == R)
+                (Nothing, Just v3) | v3 == v2 -> do
+                    (v2', g') <- roll g -- reroll an answer
+                    put ((x1, Just v2', x3), g')
+                    return (v2' == R)
+                _ -> error "internal error: impossible state in qsyssL"
+qsyssL L3 = do
+    (hvar, gen) <- get
+    case hvar of
+        (_, _, Just v3) -> return (v3 == R)
+        (x1, x2, Nothing) -> do
+            (v3, g) <- roll gen -- roll an answer according to the protocol
+            case (x1, x2) of
+                (Nothing, Nothing) -> do
+                    put ((x1, x2, Just v3), g)
+                    return (v3 == R)
+                (Just v1, Nothing) | v1 /= v3 -> do
+                    put ((x1, x2, Just v3), g)
+                    return (v3 == R)
+                (Just v1, Nothing) | v1 == v3 -> do
+                    (v3', g') <- roll g -- reroll an answer
+                    put ((x1, x2, Just v3'), g')
+                    return (v3' == R)
+                (Nothing, Just v2) | v2 /= v3 -> do
+                    put ((x1, x2, Just v3), g)
+                    return (v3 == R)
+                (Nothing, Just v2) | v2 == v3 -> do
+                    (v3', g') <- roll g -- reroll an answer
+                    put ((x1, x2, Just v3'), g')
+                    return (v3' == R)
+                _ -> error "internal error: impossible state in qsyssL"
+
+qsyssR :: PosR -> MU Outcome
+qsyssR R1 = qsyssL L1
+qsyssR R2 = qsyssL L2
+qsyssR R3 = qsyssL L3
+
+
+(⊗) :: (a -> MU Outcome) 
+    -> (b -> MU Outcome) 
+    -> (Either a b -> MU Outcome)
+f ⊗ g = \obs ->
     case obs of
-        Left L1 -> return True
-        Left L2 -> return True
-        Left L3 -> return True
-        Right R1 -> return True
-        Right R2 -> return True
-        Right R3 -> return True
+        Left l -> f l
+        Right r -> g r
+
+qsyss :: SystemQs
+qsyss = qsyssL ⊗ qsyssR
 
 
 
