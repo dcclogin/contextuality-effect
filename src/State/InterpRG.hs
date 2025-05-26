@@ -103,14 +103,14 @@ f ⊞ g = \(hvarL, hvarR) -> \obs ->
         Left l -> f hvarL l
         Right r -> g hvarR r
 
-(⊠) :: (HiddenVar -> (PosL -> Outcome)) 
-    -> (HiddenVar -> (PosR -> Outcome)) 
-    -> (HiddenVar, HiddenVar) -> (Context -> (Outcome, Outcome))
+(⊠) :: (HiddenVar -> (a -> Outcome)) 
+    -> (HiddenVar -> (b -> Outcome)) 
+    -> (HiddenVar, HiddenVar) -> ((a, b) -> (Outcome, Outcome))
 f ⊠ g = \(hvarL, hvarR) -> \(l, r) ->
     (f hvarL l, g hvarR r)
 
 csyss :: (HiddenVar, HiddenVar) -> SystemCs
-csyss = csyssL ⊠ csyssR
+csyss = csyssL ⊞ csyssR
 
 -- [TODO] csys
 -- csys is a partial Boolean Algebra with
