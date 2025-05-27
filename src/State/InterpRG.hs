@@ -72,7 +72,7 @@ isCommeasurable q1 q2 =
 -- <locality>
 -- <non-contextuality>
 
--- classical source: equally distributed
+-- classical source (equally distributed)
 csource :: StdGen -> ((HiddenVar, HiddenVar), StdGen)
 csource gen = let (hvar, g) = genExprRG gen in 
     ((hvar, hvar), g)
@@ -106,8 +106,8 @@ f ⊞ g = \(hvarL, hvarR) -> \obs ->
 (⊠) :: (HiddenVar -> (a -> Outcome)) 
     -> (HiddenVar -> (b -> Outcome)) 
     -> (HiddenVar, HiddenVar) -> ((a, b) -> (Outcome, Outcome))
-f ⊠ g = \(hvarL, hvarR) -> \(l, r) ->
-    (f hvarL l, g hvarR r)
+f ⊠ g = \(hvarL, hvarR) -> \(a, b) ->
+    (f hvarL a, g hvarR b)
 
 csyss :: (HiddenVar, HiddenVar) -> SystemCs
 csyss = csyssL ⊞ csyssR
@@ -147,6 +147,16 @@ evalC' gen (l, r) =
     in ((ol, or), g)
 
 
+runL :: (PosL -> Outcome) -> PosL -> Outcome
+runL f l = f l
+runR :: (PosR -> Outcome) -> PosR -> Outcome
+runR f r = f r
+
+
+run2 :: SystemCs -> Context -> (Outcome, Outcome)
+run2 f (l, r) = (f (Left l), f (Right r))
+
+
 
 
 
@@ -168,6 +178,27 @@ qsource = let hvar = (Nothing, Nothing, Nothing) in
 -- randomly roll R or G with equal probability
 roll :: StdGen -> MU (RG, StdGen)
 roll gen = return (genColor gen)
+
+rotateL, rotateR :: (RGU, RGU, RGU) -> (RGU, RGU, RGU)
+rotateL (x1, x2, x3) = (x2, x3, x1)
+rotateR (x1, x2, x3) = (x3, x1, x2)
+
+reorderTo :: HiddenVarU -> Observable -> (RGU, RGU, RGU)
+reorderTo hvar (Left L1) = hvar
+reorderTo hvar (Left L2) = rotateL hvar
+reorderTo hvar (Left L3) = rotateR hvar
+reorderTo hvar (Right R1) = hvar
+reorderTo hvar (Right R2) = rotateL hvar
+reorderTo hvar (Right R3) = rotateR hvar
+
+reorderFrom :: (RGU, RGU, RGU) -> Observable -> HiddenVarU
+reorderFrom (x1, x2, x3) (Left L1) = (x1, x2, x3)
+reorderFrom (x2, x3, x1) (Left L2) = (x1, x2, x3)
+reorderFrom (x3, x1, x2) (Left L3) = (x1, x2, x3)
+reorderFrom (x1, x2, x3) (Right R1) = (x1, x2, x3)
+reorderFrom (x2, x3, x1) (Right R2) = (x1, x2, x3)
+reorderFrom (x3, x1, x2) (Right R3) = (x1, x2, x3)
+
 
 -- particle to be received by detector A (left)
 qsyssL :: PosL -> MU Outcome
@@ -254,16 +285,24 @@ qsyssR R2 = qsyssL L2
 qsyssR R3 = qsyssL L3
 
 
-(⊗) :: (a -> MU Outcome) 
+(⊕) :: (a -> MU Outcome) 
     -> (b -> MU Outcome) 
     -> (Either a b -> MU Outcome)
-f ⊗ g = \obs ->
+f ⊕ g = \obs ->
     case obs of
         Left l -> f l
         Right r -> g r
 
+(⊗) :: (a -> MU Outcome)
+    -> (b -> MU Outcome) 
+    -> ((a, b) -> MU (Outcome, Outcome))
+f ⊗ g = \(a, b) -> do
+    oa <- f a
+    ob <- g b
+    return (oa, ob)
+
 qsyss :: SystemQs
-qsyss = qsyssL ⊗ qsyssR
+qsyss = qsyssL ⊕ qsyssR
 
 
 
