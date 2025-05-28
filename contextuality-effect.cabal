@@ -38,6 +38,7 @@ library
       M
       ManufacturingQC
       MerminCubes
+      PaperReview
       Pure.ExperimentRG
       Pure.ObservableRG
       RandomUtils
