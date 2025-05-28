@@ -53,6 +53,7 @@ executables:
     - random
     - async
     - stm
+    - containers
 
 tests:
   contextuality-effect-test:

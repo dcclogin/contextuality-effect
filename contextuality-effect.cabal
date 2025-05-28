@@ -36,6 +36,9 @@ library
       Cont.ObservableRG
       Lib
       M
+      ManufacturingQC
+      MerminCubes
+      PaperReview
       Pure.ExperimentRG
       Pure.ObservableRG
       RandomUtils
@@ -71,6 +74,7 @@ executable contextuality-effect-exe
   build-depends:
       async
     , base >=4.7 && <5
+    , containers
     , contextuality-effect
     , mtl
     , random
