@@ -2,8 +2,7 @@
 
 module SyntaxRG where
 
--- color (intrinsic property of a particle)
--- also color flashed on a detector
+-- color (intrinsic property of a particle in classical sense)
 data RG = R | G
     deriving (Show, Eq)
 
@@ -26,6 +25,7 @@ data Position = S1 | S2 | S3
 -- configuration of two detectors (L and R)
 -- each configuration corresponds to a measurement context
 type Config = (Position, Position)
+
 
 type Record1O = (Config, Outcome)
 type Record2O = (Config, (Outcome, Outcome))

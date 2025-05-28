@@ -171,13 +171,60 @@ run2 f (l, r) = (f (Left l), f (Right r))
 -- [TODO] abstract away the <protocol>
 
 -- quantum source: no intrinsic, preexisting properties!
-qsource :: (HiddenVarU, HiddenVarU)
-qsource = let hvar = (Nothing, Nothing, Nothing) in
+qsource0 :: (HiddenVarU, HiddenVarU)
+qsource0 = let hvar = (Nothing, Nothing, Nothing) in
     (hvar, hvar)
+
+-- quantum source generator for the <forgetting model>
+qsourceGen :: StdGen -> ((HiddenVarU, HiddenVarU), StdGen)
+qsourceGen gen = let (v1, v2, v3) = getExprRG gen in
+    let hvar = (Just v1, Just v2, Just v3) in
+    ((hvar, hvar), gen)
+
+
 
 -- randomly roll R or G with equal probability
 roll :: StdGen -> MU (RG, StdGen)
 roll gen = return (genColor gen)
+
+get1, get2, get3 :: MU RGU
+get1 = do
+    ((x1, _, _), _) <- get
+    return x1
+get2 = do
+    ((_, x2, _), _) <- get
+    return x2
+get3 = do
+    ((_, _, x3), _) <- get
+    return x3
+
+put1, put2, put3 :: RGU -> MU a
+put1 x1 = do
+    ((_, x2, x3), gen) <- get
+    put ((x1, x2, x3), gen)
+put2 x2 = do
+    ((x1, _, x3), gen) <- get
+    put ((x1, x2, x3), gen)
+put3 x3 = do
+    ((x1, x2, _), gen) <- get
+    put ((x1, x2, x3), gen)
+
+forget1, forget2, forget3 :: MU a
+forget1 = do
+    ((_, x2, x3), gen) <- get
+    put (Nothing, x2, x3)
+forget2 = do
+    ((x1, _, x3), gen) <- get
+    put (x1, Nothing, x3)
+forget3 = do
+    ((x1, x2, _), gen) <- get
+    put (x1, x2, Nothing)
+
+forgetAll :: MU a
+forgetAll = do
+    (_, gen) <- get
+    put ((Nothing, Nothing, Nothing), gen)
+
 
 rotateL, rotateR :: (RGU, RGU, RGU) -> (RGU, RGU, RGU)
 rotateL (x1, x2, x3) = (x2, x3, x1)

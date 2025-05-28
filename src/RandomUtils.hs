@@ -6,6 +6,14 @@ import SyntaxRG
 -- presupposition: consecutively generated values are independent
 -- in the end we can wire up all "randoms" with one input generator
 
+-- generate a 3-tuple of Bool
+genBool3 :: StdGen -> ((Bool, Bool, Bool), StdGen)
+genBool3 gen =
+    let (b1, g1) = random gen
+        (b2, g2) = random g1
+        (b3, g3) = random g2
+    in ((b1, b2, b3), g3)
+
 -- generate a random color R/G
 genColor :: StdGen -> (RG, StdGen)
 genColor gen =

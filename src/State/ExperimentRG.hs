@@ -1,4 +1,4 @@
- {-# LANGUAGE UnicodeSyntax #-}
+{-# LANGUAGE UnicodeSyntax #-}
 module State.ExperimentRG where
 
 import SyntaxRG
@@ -28,6 +28,9 @@ exp2 qState (f1, f2) = do
     o2 <- f2 qState
     return (o1, o2)
 
+-- (1) concurrently or randomize the order of execution
+-- (2) show that the order of execution does not matter and keep the order
+
 -- reify the computational effect per observable
 run1 :: StdGen -> Qsystem -> Observable -> (Outcome, StdGen)
 run1 gen qState f =
@@ -42,6 +45,8 @@ run2 gen qState ctx =
         (val, (_, _, g)) = runState m (Nothing, S1, gen)
     in (val, g)
 
+
+-- customized question regarding original outcomes (Outcome, Outcome)
 type Query = (Outcome, Outcome) -> M Outcome
 
 -- constant queries
@@ -72,14 +77,15 @@ notq f = \(o1, o2) -> do
     r <- f (o1, o2)
     return (not r)
 
-q1 :: Query
+-- q1: is same color?
+-- q2: is not same color?
+q1, q2 :: Query
 q1 = (lo ⨂ ro) ⨁ (notq lo ⨂ notq ro)
+q2 = (lo ⨂ notq ro) ⨁ (notq lo ⨂ ro)
 
 
-{- psc :: Context -> Qsystem -> M Outcome
-psc ctx qState =
-    let m = exp2 qState ctx in
-        m >>= \(o1, o2) -> return ((o1 && o2) || (not o1 && not o2)) -}
+-- (1) map switch positions to observables
+-- (2) allow an extra argument Position of Observable
 
 configToContext :: Config -> Context
 configToContext config = case config of

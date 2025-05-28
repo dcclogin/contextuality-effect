@@ -41,6 +41,7 @@ library
       RandomUtils
       State.Effect
       State.ExperimentRG
+      State.InterpRG
       State.ObservableRG
       SyntaxRG
   other-modules:
