@@ -36,6 +36,7 @@ library
       Cont.ObservableRG
       Lib
       M
+      ManufacturingQC
       MerminCubes
       Pure.ExperimentRG
       Pure.ObservableRG
