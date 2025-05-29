@@ -41,6 +41,10 @@ type SystemQs = Observable -> MU Outcome
 type SystemQ = Question -> MU Outcome
 
 
+-- note down observed color
+register :: RG -> Outcome
+register v = (v == R)
+
 
 -- intuition: whether two questions can be asked together
 isCommeasurable :: Question -> Question -> Bool
@@ -170,22 +174,26 @@ run2 f (l, r) = (f (Left l), f (Right r))
 -- nonlocal hidden variable
 -- [TODO] abstract away the <protocol>
 
--- quantum source: no intrinsic, preexisting properties!
+-- quantum source: no intrinsic, preexisting properties! for <nothing model>
 qsource0 :: (HiddenVarU, HiddenVarU)
 qsource0 = let hvar = (Nothing, Nothing, Nothing) in
     (hvar, hvar)
 
 -- quantum source generator for the <forgetting model>
 qsourceGen :: StdGen -> ((HiddenVarU, HiddenVarU), StdGen)
-qsourceGen gen = let (v1, v2, v3) = getExprRG gen in
+qsourceGen gen = let ((v1, v2, v3), g) = genExprRG gen in
     let hvar = (Just v1, Just v2, Just v3) in
-    ((hvar, hvar), gen)
+    ((hvar, hvar), g)
 
 
 
 -- randomly roll R or G with equal probability
-roll :: StdGen -> MU (RG, StdGen)
-roll gen = return (genColor gen)
+roll :: MU RG
+roll = do
+    (hvar, gen) <- get
+    let (v, g) = genColor gen
+    put (hvar, g)
+    return v
 
 get1, get2, get3 :: MU RGU
 get1 = do
@@ -198,7 +206,12 @@ get3 = do
     ((_, _, x3), _) <- get
     return x3
 
-put1, put2, put3 :: RGU -> MU a
+getAll :: MU HiddenVarU
+getAll = do
+    (hvar, _) <- get
+    return hvar
+
+put1, put2, put3 :: RGU -> MU ()
 put1 x1 = do
     ((_, x2, x3), gen) <- get
     put ((x1, x2, x3), gen)
@@ -209,21 +222,26 @@ put3 x3 = do
     ((x1, x2, _), gen) <- get
     put ((x1, x2, x3), gen)
 
-forget1, forget2, forget3 :: MU a
+forget1, forget2, forget3 :: MU ()
 forget1 = do
     ((_, x2, x3), gen) <- get
-    put (Nothing, x2, x3)
+    put ((Nothing, x2, x3), gen)
 forget2 = do
     ((x1, _, x3), gen) <- get
-    put (x1, Nothing, x3)
+    put ((x1, Nothing, x3), gen)
 forget3 = do
     ((x1, x2, _), gen) <- get
-    put (x1, x2, Nothing)
+    put ((x1, x2, Nothing), gen)
 
-forgetAll :: MU a
+forgetAll :: MU ()
 forgetAll = do
     (_, gen) <- get
     put ((Nothing, Nothing, Nothing), gen)
+
+
+-- forgetting model: once read a color, forget every other occurrence of the same color
+-- color is consumed when read
+-- compare it with Spekken's toy model (balanced knowledge principle <epistemic>)
 
 
 rotateL, rotateR :: (RGU, RGU, RGU) -> (RGU, RGU, RGU)
@@ -250,78 +268,78 @@ reorderFrom (x3, x1, x2) (Right R3) = (x1, x2, x3)
 -- particle to be received by detector A (left)
 qsyssL :: PosL -> MU Outcome
 qsyssL L1 = do
-    (hvar, gen) <- get
+    hvar <- getAll
     case hvar of
         (Just v1, _, _) -> return (v1 == R)
         (Nothing, x2, x3) -> do
-            (v1, g) <- roll gen -- roll an answer according to the protocol
+            v1 <- roll -- roll an answer according to the protocol
             case (x2, x3) of
                 (Nothing, Nothing) -> do
-                    put ((Just v1, x2, x3), g)
+                    put1 (Just v1)
                     return (v1 == R)
                 (Just v2, Nothing) | v2 /= v1 -> do
-                    put ((Just v1, x2, x3), g)
+                    put1 (Just v1)
                     return (v1 == R)
                 (Just v2, Nothing) | v2 == v1 -> do
-                    (v1', g') <- roll g -- reroll an answer
-                    put ((Just v1', x2, x3), g')
+                    v1' <- roll -- reroll an answer
+                    put1 (Just v1')
                     return (v1' == R)
                 (Nothing, Just v3) | v3 /= v1 -> do
-                    put ((Just v1, x2, x3), g)
+                    put1 (Just v1)
                     return (v1 == R)
                 (Nothing, Just v3) | v3 == v1 -> do
-                    (v1', g') <- roll g -- reroll an answer
-                    put ((Just v1', x2, x3), g')
+                    v1' <- roll -- reroll an answer
+                    put1 (Just v1')
                     return (v1' == R)
                 _ -> error "internal error: impossible state in qsyssL"
 qsyssL L2 = do
-    (hvar, gen) <- get
+    hvar <- getAll
     case hvar of
         (_, Just v2, _) -> return (v2 == R)
         (x1, Nothing, x3) -> do
-            (v2, g) <- roll gen -- roll an answer according to the protocol
+            v2 <- roll -- roll an answer according to the protocol
             case (x1, x3) of
                 (Nothing, Nothing) -> do
-                    put ((x1, Just v2, x3), g)
+                    put2 (Just v2)
                     return (v2 == R)
                 (Just v1, Nothing) | v1 /= v2 -> do
-                    put ((x1, Just v2, x3), g)
+                    put2 (Just v2)
                     return (v2 == R)
                 (Just v1, Nothing) | v1 == v2 -> do
-                    (v2', g') <- roll g -- reroll an answer
-                    put ((x1, Just v2', x3), g')
+                    v2' <- roll -- reroll an answer
+                    put2 (Just v2')
                     return (v2' == R)
                 (Nothing, Just v3) | v3 /= v2 -> do
-                    put ((x1, Just v2, x3), g)
+                    put2 (Just v2)
                     return (v2 == R)
                 (Nothing, Just v3) | v3 == v2 -> do
-                    (v2', g') <- roll g -- reroll an answer
-                    put ((x1, Just v2', x3), g')
+                    v2' <- roll -- reroll an answer
+                    put2 (Just v2')
                     return (v2' == R)
                 _ -> error "internal error: impossible state in qsyssL"
 qsyssL L3 = do
-    (hvar, gen) <- get
+    hvar <- getAll
     case hvar of
         (_, _, Just v3) -> return (v3 == R)
         (x1, x2, Nothing) -> do
-            (v3, g) <- roll gen -- roll an answer according to the protocol
+            v3 <- roll -- roll an answer according to the protocol
             case (x1, x2) of
                 (Nothing, Nothing) -> do
-                    put ((x1, x2, Just v3), g)
+                    put3 (Just v3)
                     return (v3 == R)
                 (Just v1, Nothing) | v1 /= v3 -> do
-                    put ((x1, x2, Just v3), g)
+                    put3 (Just v3)
                     return (v3 == R)
                 (Just v1, Nothing) | v1 == v3 -> do
-                    (v3', g') <- roll g -- reroll an answer
-                    put ((x1, x2, Just v3'), g')
+                    v3' <- roll -- reroll an answer
+                    put3 (Just v3')
                     return (v3' == R)
                 (Nothing, Just v2) | v2 /= v3 -> do
-                    put ((x1, x2, Just v3), g)
+                    put3 (Just v3)
                     return (v3 == R)
                 (Nothing, Just v2) | v2 == v3 -> do
-                    (v3', g') <- roll g -- reroll an answer
-                    put ((x1, x2, Just v3'), g')
+                    v3' <- roll -- reroll an answer
+                    put3 (Just v3')
                     return (v3' == R)
                 _ -> error "internal error: impossible state in qsyssL"
 
@@ -357,3 +375,19 @@ qsyss = qsyssL ⊕ qsyssR
 -- [TODO] qsys
 -- qsys is a partial Boolean Algebra with
 -- 6 variables {L1, L2, L3, R1, R2, R3} and a binary relation ⊙ <commesurable>
+
+
+-- Experimental Metaphysics
+-- focus on:
+-- <observer> and <observed>
+-- <supposed knowledge> and misrecognition
+-- <consistency> and <completeness>, binary classifier and confusion matrix
+-- <ontic> and <epistemic>
+
+-- Analogies:
+-- <Mermin's Cube> -> <manufactured product> -> <DOPE paper review>
+-- client-library
+-- exam-student
+-- 20 questions
+
+-- asymptotic approach to the truth (probablistic distribution of classical model)

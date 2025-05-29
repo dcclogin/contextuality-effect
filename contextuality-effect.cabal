@@ -57,6 +57,7 @@ library
   build-depends:
       async
     , base >=4.7 && <5
+    , containers
     , mtl
     , random
     , stm
@@ -94,6 +95,7 @@ test-suite contextuality-effect-test
   build-depends:
       async
     , base >=4.7 && <5
+    , containers
     , contextuality-effect
     , mtl
     , random
