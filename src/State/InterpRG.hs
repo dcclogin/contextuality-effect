@@ -195,21 +195,24 @@ roll = do
     put (hvar, g)
     return v
 
-get1, get2, get3 :: MU RGU
-get1 = do
-    ((x1, _, _), _) <- get
-    return x1
-get2 = do
-    ((_, x2, _), _) <- get
-    return x2
-get3 = do
-    ((_, _, x3), _) <- get
-    return x3
 
 getAll :: MU HiddenVarU
 getAll = do
     (hvar, _) <- get
     return hvar
+
+-- alternative, get1 :: Observable -> MU RGU
+-- where Observable serves as <index>
+get1, get2, get3 :: MU RGU
+get1 = do
+    (x1, _, _) <- getAll
+    return x1
+get2 = do
+    (_, x2, _) <- getAll
+    return x2
+get3 = do
+    (_, _, x3) <- getAll
+    return x3
 
 put1, put2, put3 :: RGU -> MU ()
 put1 x1 = do
@@ -222,21 +225,49 @@ put3 x3 = do
     ((x1, x2, _), gen) <- get
     put ((x1, x2, x3), gen)
 
+-- unconditional forget
 forget1, forget2, forget3 :: MU ()
-forget1 = do
-    ((_, x2, x3), gen) <- get
-    put ((Nothing, x2, x3), gen)
-forget2 = do
-    ((x1, _, x3), gen) <- get
-    put ((x1, Nothing, x3), gen)
-forget3 = do
-    ((x1, x2, _), gen) <- get
-    put ((x1, x2, Nothing), gen)
+forget1 = put1 Nothing
+forget2 = put2 Nothing
+forget3 = put3 Nothing
+
+-- conditional forget
+forgetc1, forgetc2, forgetc3 :: (RGU -> Bool) -> MU ()
+forgetc1 p = do
+    (x1, _, _) <- getAll
+    if p x1 then forget1 else return ()
+forgetc2 p = do
+    (_, x2, _) <- getAll
+    if p x2 then forget2 else return ()
+forgetc3 p = do
+    (_, _, x3) <- getAll
+    if p x3 then forget3 else return ()
 
 forgetAll :: MU ()
 forgetAll = do
-    (_, gen) <- get
-    put ((Nothing, Nothing, Nothing), gen)
+    forget1
+    forget2
+    forget3
+
+-- effectful get/read forcing forgetting
+getf1 :: MU RGU
+getf1 = do
+    (x1, _, _) <- getAll
+    forgetc1 (== x1)
+    forgetc2 (== x1)
+    return x1
+getf2 :: MU RGU
+getf2 = do
+    (_, x2, _) <- getAll
+    forgetc1 (== x2)
+    forgetc3 (== x2)
+    return x2
+getf3 :: MU RGU
+getf3 = do
+    (_, _, x3) <- getAll
+    forgetc2 (== x3)
+    forgetc3 (== x3)
+    return x3
 
 
 -- forgetting model: once read a color, forget every other occurrence of the same color
