@@ -42,6 +42,7 @@ library
       Pure.ExperimentRG
       Pure.ObservableRG
       RandomUtils
+      State.Appearance
       State.Effect
       State.ExperimentRG
       State.InterpRG

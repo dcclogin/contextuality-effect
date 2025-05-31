@@ -62,7 +62,7 @@ main = do
         let count = Map.findWithDefault 0 (same, color) counts
         in if total same == 0 then 0 else fromIntegral count * 100 / fromIntegral (total same) :: Double
 
-  putStrLn $ "Ran " ++ show n ++ " trials.\n"
+  putStrLn $ "MerminCubes: Ran " ++ show n ++ " trials.\n"
   putStrLn "Category                Percent"
   printEntry "SameSetting & SameColor" (getPct True  True)
   printEntry "SameSetting & DiffColor" (getPct True  False)

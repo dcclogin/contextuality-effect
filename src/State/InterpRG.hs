@@ -84,6 +84,7 @@ csource gen = let (hvar, g) = genExprRG gen in
 -- [TODO] classical source: never generate (R, R, R) or (G, G, G)
 
 -- particle to be received by detector A (left)
+-- correspond to <inspect>
 csyssL :: HiddenVar -> (PosL -> Outcome)
 csyssL (a1, a2, a3) = \l ->
     case l of
@@ -234,13 +235,13 @@ forget3 = put3 Nothing
 -- conditional forget
 forgetc1, forgetc2, forgetc3 :: (RGU -> Bool) -> MU ()
 forgetc1 p = do
-    (x1, _, _) <- getAll
+    x1 <- get1
     if p x1 then forget1 else return ()
 forgetc2 p = do
-    (_, x2, _) <- getAll
+    x2 <- get2
     if p x2 then forget2 else return ()
 forgetc3 p = do
-    (_, _, x3) <- getAll
+    x3 <- get3
     if p x3 then forget3 else return ()
 
 forgetAll :: MU ()
@@ -252,19 +253,19 @@ forgetAll = do
 -- effectful get/read forcing forgetting
 getf1 :: MU RGU
 getf1 = do
-    (x1, _, _) <- getAll
+    x1 <- get1
     forgetc1 (== x1)
     forgetc2 (== x1)
     return x1
 getf2 :: MU RGU
 getf2 = do
-    (_, x2, _) <- getAll
+    x2 <- get2
     forgetc1 (== x2)
     forgetc3 (== x2)
     return x2
 getf3 :: MU RGU
 getf3 = do
-    (_, _, x3) <- getAll
+    x3 <- get3
     forgetc2 (== x3)
     forgetc3 (== x3)
     return x3
@@ -414,6 +415,7 @@ qsyss = qsyssL ⊕ qsyssR
 -- <supposed knowledge> and misrecognition
 -- <consistency> and <completeness>, binary classifier and confusion matrix
 -- <ontic> and <epistemic>
+-- <in-itself> and <for-itself>/<for-us>
 
 -- Analogies:
 -- <Mermin's Cube> -> <manufactured product> -> <DOPE paper review>

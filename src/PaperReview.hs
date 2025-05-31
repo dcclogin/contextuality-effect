@@ -85,7 +85,7 @@ main = do
         let count = Map.findWithDefault 0 (same, agree) counts
         in if total same == 0 then 0 else fromIntegral count * 100 / fromIntegral (total same) :: Double
 
-  putStrLn $ "Ran " ++ show n ++ " trials.\n"
+  putStrLn $ "PaperReview: Ran " ++ show n ++ " trials.\n"
   putStrLn "Category                          Percent"
   printEntry "SameProperty & SameDecision" (getPct True  True)
   printEntry "SameProperty & DiffDecision" (getPct True  False)
