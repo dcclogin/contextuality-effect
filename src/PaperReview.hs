@@ -45,6 +45,18 @@ randomPaper = Paper <$> randomMargin <*> randomFontSize <*> randomPageCount
 randomProperty :: IO Property
 randomProperty = toEnum <$> randomRIO (0, 2)
 
+-- random error (up tp x%) per decision
+err :: Int -> Decision -> IO Decision
+err x d = do
+  e <- randomRIO (0, x) :: IO Int
+  t <- randomRIO (0, 100) :: IO Int
+  if t < e
+    then return $ if d == Pass then Fail else Pass  -- flip decision with error
+    else return d  -- no error, keep decision
+
+-- nonzero error cannot guarantee perfect agreement when sameProperty
+-- neither can it reduce agreement when diffProperty
+
 -- Source gives the same paper to both reviewers
 source :: IO (Paper, Paper)
 source = do paper <- randomPaper; return (paper, paper)
@@ -52,8 +64,8 @@ source = do paper <- randomPaper; return (paper, paper)
 -- Inspection logic based on passing thresholds
 inspect :: Paper -> Property -> Decision
 inspect paper prop = case prop of
-  Margins   -> if abs (margins paper - 1.0) < 0.01 then Pass else Fail
-  FontSize  -> if abs (fontSize paper - 12.0) < 0.01 then Pass else Fail
+  Margins   -> if abs (margins paper - 1.0) < 0.25 then Pass else Fail
+  FontSize  -> if abs (fontSize paper - 12.0) < 1.0 then Pass else Fail
   NumPages  -> if numPages paper < 20 then Pass else Fail
 
 -- Run a single trial
@@ -62,8 +74,10 @@ runTrial = do
   p1 <- randomProperty
   p2 <- randomProperty
   (paper1, paper2) <- source
+  d1 <- err 0 $ inspect paper1 p1
+  d2 <- err 0 $ inspect paper2 p2
   let sameProperty = p1 == p2
-      sameDecision = inspect paper1 p1 == inspect paper2 p2
+      sameDecision = d1 == d2
   return (sameProperty, sameDecision)
 
 -- Collect statistics

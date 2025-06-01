@@ -1,7 +1,7 @@
 The Curious Collapse of Consistency at DOPE
 
 In the spring of its founding year, the Department of Publication Efficiency — better known as DOPE — launched a radical experiment in peer review. Their mission was to eliminate subjectivity, minimize effort, and bring scientific clarity to the evaluation process by reducing it to a simple question of format.
-
+s
 Each submitted paper would be reviewed by two referees, chosen independently. Each referee would inspect exactly one formatting feature, selected at random from three possibilities:
 	•	Column layout: Single-column or double-column?
 	•	Line spacing: Single or double?
