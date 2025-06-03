@@ -61,9 +61,9 @@ putDecision :: Property -> Maybe Decision -> M ()
 putDecision prop d = do
   paper <- get
   let newPaper = case prop of
-        Margins   -> paper { margins = d }
-        FontSize  -> paper { fontSize = d }
-        NumPages  -> paper { numPages = d }
+		Margins   -> paper { margins = d }
+		FontSize  -> paper { fontSize = d }
+		NumPages  -> paper { numPages = d }
   put newPaper
 
 -- unconditional forget
@@ -140,8 +140,8 @@ inspect1 paper prop = evalStateT (sys prop) paper
 
 inspect2 :: Paper -> (Property, Property) -> IO (Decision, Decision)
 inspect2 paper (prop1, prop2) =
-    let m = (sys ⨷ sys) (prop1, prop2) in 
-      evalStateT m paper
+	let m = (sys ⨷ sys) (prop1, prop2) in 
+		evalStateT m paper
 
 
 -- Run a single trial
