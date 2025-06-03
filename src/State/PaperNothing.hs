@@ -57,63 +57,63 @@ thePaper = Paper Nothing Nothing Nothing
 getDecision :: Property -> M (Maybe Decision)
 getDecision prop = do
   paper <- get
-	case prop of
-		Margins   -> return (margins paper)
-		FontSize  -> return (fontSize paper)
-		NumPages  -> return (numPages paper)
+  case prop of
+    Margins   -> return (margins paper)
+    FontSize  -> return (fontSize paper)
+    NumPages  -> return (numPages paper)
 
   
 putDecision :: Property -> Maybe Decision -> M ()
 putDecision prop d = do
-	paper <- get
-	let newPaper = case prop of
-		Margins   -> paper { margins = d }
-		FontSize  -> paper { fontSize = d }
-		NumPages  -> paper { numPages = d }
-	put newPaper
+  paper <- get
+  let newPaper = case prop of
+    Margins   -> paper { margins = d }
+    FontSize  -> paper { fontSize = d }
+    NumPages  -> paper { numPages = d }
+  put newPaper
 
 
 -- check if any other properties have made a specific decision 
 crecallDecision :: Property -> (Maybe Decision -> Bool) -> M Bool
 crecallDecision Margins pred = do
-	d1 <- getDecision FontSize
-	d2 <- getDecision NumPages
-	return (pred d1 || pred d2)
+  d1 <- getDecision FontSize
+  d2 <- getDecision NumPages
+  return (pred d1 || pred d2)
 crecallDecision FontSize pred = do
-	d1 <- getDecision Margins
-	d2 <- getDecision NumPages
-	return (pred d1 || pred d2)
+  d1 <- getDecision Margins
+  d2 <- getDecision NumPages
+  return (pred d1 || pred d2)
 crecallDecision NumPages pred = do
-	d1 <- getDecision Margins
-	d2 <- getDecision FontSize
-	return (pred d1 || pred d2)
+  d1 <- getDecision Margins
+  d2 <- getDecision FontSize
+  return (pred d1 || pred d2)
 
 
 -- decisions are rendered <by need> (TODO: refine the main logic for <nothing>)
 sys :: Property -> M Decision
 sys prop = do
-	d <- getDecision prop
-	case d of
-		Just dd -> return dd
-		Nothing -> do
-			dd <- liftIO randomDecision
-			b <- crecallDecision prop (== Just dd)
-			if (not b) then do
-				putDecision prop (Just dd)
-				return dd
-			else do
-				dd' <- liftIO randomDecision
-				putDecision prop (Just dd')
-				return dd'
+  d <- getDecision prop
+  case d of
+    Just dd -> return dd
+    Nothing -> do
+      dd <- liftIO randomDecision
+      b <- crecallDecision prop (== Just dd)
+      if (not b) then do
+        putDecision prop (Just dd)
+        return dd
+      else do
+        dd' <- liftIO randomDecision
+        putDecision prop (Just dd')
+        return dd'
 
 -- bipartite system
 (⨷) :: (Property -> M Decision) 
     -> (Property -> M Decision) 
     -> (Property, Property) -> M (Decision, Decision)
 (sys1 ⨷ sys2) (prop1, prop2) = do
-	d1 <- sys1 prop1
-	d2 <- sys2 prop2
-	return (d1, d2)
+  d1 <- sys1 prop1
+  d2 <- sys2 prop2
+  return (d1, d2)
 
 
 inspect1 :: Paper -> Property -> IO Decision
@@ -121,8 +121,8 @@ inspect1 paper prop = evalStateT (sys prop) paper
 
 inspect2 :: Paper -> (Property, Property) -> IO (Decision, Decision)
 inspect2 paper (prop1, prop2) =
-	let m = (sys ⨷ sys) (prop1, prop2) in 
-		evalStateT m paper
+  let m = (sys ⨷ sys) (prop1, prop2) in 
+    evalStateT m paper
 
 
 -- Run a single trial
