@@ -47,7 +47,8 @@ library
       State.ExperimentRG
       State.InterpRG
       State.ObservableRG
-      State.Paper
+      State.PaperForget
+      State.PaperNothing
       SyntaxRG
   other-modules:
       Paths_contextuality_effect

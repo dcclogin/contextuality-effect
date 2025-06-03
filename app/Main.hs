@@ -7,6 +7,8 @@ import Cont.ExprRGCont
 import MerminCubes
 import ManufacturingQC
 import PaperReview
+import State.PaperForget
+import State.PaperNothing
 import System.Random (mkStdGen)
 
 main :: IO ()
@@ -15,6 +17,8 @@ main = do
     -- State.ExperimentRG.runExperiment 100000 (mkStdGen 42)
     -- Concur.ExprRGConcur.printRun 10000 88888
     -- Cont.ExprRGCont.printRun 10000 99999
-    MerminCubes.main
-    ManufacturingQC.main
+    -- MerminCubes.main
+    -- ManufacturingQC.main
     PaperReview.main
+    State.PaperForget.main
+    State.PaperNothing.main

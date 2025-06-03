@@ -1,4 +1,4 @@
-module State.PaperForget where
+module State.PaperNothing where
 
 import System.Random
 import System.Environment (getArgs)
@@ -48,6 +48,12 @@ source = do paper <- randomPaper; return (paper, paper)
 type M = StateT Paper IO
 
 
+-- <The Paper> has no intrinsic properties
+-- There is only one indistinguishable paper which appears differently 
+thePaper :: Paper
+thePaper = Paper Nothing Nothing Nothing
+
+
 getDecision :: Property -> M (Maybe Decision)
 getDecision prop = do
   paper <- get
@@ -66,63 +72,39 @@ putDecision prop d = do
         NumPages  -> paper { numPages = d }
   put newPaper
 
--- unconditional forget
-forgetDecision :: Property -> M ()
-forgetDecision prop = putDecision prop Nothing
 
--- conditional forget
-cforgetDecision :: Property -> (Maybe Decision -> Bool) -> M ()
-cforgetDecision prop pred = do
-  d <- getDecision prop
-  if pred d then forgetDecision prop else return ()
-
--- forgetful-get
-getDecisionF :: Property -> M (Maybe Decision)
-getDecisionF Margins = do
-  m <- getDecision Margins
-  cforgetDecision FontSize (== m)
-  cforgetDecision NumPages (== m)
-  return m
-getDecisionF FontSize = do
-  m <- getDecision FontSize
-  cforgetDecision Margins (== m)
-  cforgetDecision NumPages (== m)
-  return m
-getDecisionF NumPages = do
-  m <- getDecision NumPages
-  cforgetDecision Margins (== m)
-  cforgetDecision FontSize (== m)
-  return m
-  
+-- check if any other properties have made a specific decision 
+crecallDecision :: Property -> (Maybe Decision -> Bool) -> M Bool
+crecallDecision Margins pred = do
+	d1 <- getDecision FontSize
+	d2 <- getDecision NumPages
+	return (pred d1 || pred d2)
+crecallDecision FontSize pred = do
+	d1 <- getDecision Margins
+	d2 <- getDecision NumPages
+	return (pred d1 || pred d2)
+crecallDecision NumPages pred = do
+	d1 <- getDecision Margins
+	d2 <- getDecision FontSize
+	return (pred d1 || pred d2)
 
 
--- criteria for Pass/Fail decisions
--- impossible for <Nothing> to appear to the reviewers
-{--
-judgeMargin :: Double -> Decision
-judgeMargin m = if abs (m - 1.0) < 0.25 then Pass else Fail
-
-judgeFontSize :: Double -> Decision
-judgeFontSize fs = if abs (fs - 12.0) < 1.0 then Pass else Fail
-
-judgeNumPages :: Int -> Decision
-judgeNumPages np = if np < 20 then Pass else Fail
---}
-
--- [TODO]: come up with a natural way to express forgetting model
-
-
--- the main logic for quantum system <appearance>
+-- decisions are rendered <by need> (TODO: refine the main logic for <nothing>)
 sys :: Property -> M Decision
 sys prop = do
-  d <- getDecisionF prop
+  d <- getDecision prop
   case d of
-    Nothing -> do
-      dd <- liftIO randomDecision
-      putDecision prop (Just dd)
-      return dd
     Just dd -> return dd
-
+    Nothing -> do
+			dd <- liftIO randomDecision
+			b <- crecallDecision prop (== Just dd)
+			if (not b) then do
+				putDecision prop (Just dd)
+				return dd
+			else do
+				dd' <- liftIO randomDecision
+				putDecision prop (Just dd')
+				return dd'
 
 -- bipartite system
 (⨷) :: (Property -> M Decision) 
@@ -132,7 +114,6 @@ sys prop = do
   d1 <- sys1 prop1
   d2 <- sys2 prop2
   return (d1, d2)
-
 
 
 inspect1 :: Paper -> Property -> IO Decision
@@ -149,8 +130,8 @@ runTrial :: IO ReviewerAgreement
 runTrial = do
   p1 <- randomProperty
   p2 <- randomProperty
-  paper <- randomPaper
-  (d1, d2) <- inspect2 paper (p1, p2)
+  -- paper <- randomPaper
+  (d1, d2) <- inspect2 thePaper (p1, p2)
   let sameProperty = p1 == p2
       sameDecision = d1 == d2
   return (sameProperty, sameDecision)
@@ -175,7 +156,7 @@ main = do
         let count = Map.findWithDefault 0 (same, agree) counts
         in if total same == 0 then 0 else fromIntegral count * 100 / fromIntegral (total same) :: Double
 
-  putStrLn $ "PaperReview (State, Forgetting): Ran " ++ show n ++ " trials.\n"
+  putStrLn $ "PaperReview (State, Nothing): Ran " ++ show n ++ " trials.\n"
   putStrLn "Category                          Percent"
   printEntry "SameProperty & SameDecision" (getPct True  True)
   printEntry "SameProperty & DiffDecision" (getPct True  False)
