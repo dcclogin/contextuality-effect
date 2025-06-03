@@ -56,7 +56,7 @@ thePaper = Paper Nothing Nothing Nothing
 
 getDecision :: Property -> M (Maybe Decision)
 getDecision prop = do
-	paper <- get
+  paper <- get
 	case prop of
 		Margins   -> return (margins paper)
 		FontSize  -> return (fontSize paper)
