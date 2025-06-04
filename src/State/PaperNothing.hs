@@ -26,8 +26,8 @@ type ReviewerAgreement = (Bool, Bool)  -- (sameProperty, sameDecision)
 
 randomDecision :: IO Decision
 randomDecision = do
-	b <- randomIO
-	return $ if b then Pass else Fail
+  b <- randomIO
+  return $ if b then Pass else Fail
 
 randomPaper :: IO Paper
 randomPaper = Paper <$> (Just <$> randomDecision) 
@@ -67,10 +67,23 @@ putDecision :: Property -> Maybe Decision -> M ()
 putDecision prop d = do
   paper <- get
   let newPaper = case prop of
-    Margins   -> paper { margins = d }
-    FontSize  -> paper { fontSize = d }
-    NumPages  -> paper { numPages = d }
+		Margins   -> paper { margins = d }
+		FontSize  -> paper { fontSize = d }
+		NumPages  -> paper { numPages = d }
   put newPaper
+
+
+-- render a random decision for a property
+renderDecision :: Property -> M Decision
+renderDecision prop = do
+  dd <- liftIO randomDecision
+  putDecision prop (Just dd)
+  return dd
+
+-- stream of random decisions for a property
+-- TODO: integrate with Traversable
+renderDecisions :: Property -> M [Decision]
+renderDecisions prop = sequenceA $ repeat (renderDecision prop)
 
 
 -- check if any other properties have made a specific decision 
@@ -96,15 +109,12 @@ sys prop = do
   case d of
     Just dd -> return dd
     Nothing -> do
-      dd <- liftIO randomDecision
+      dd <- renderDecision prop
       b <- crecallDecision prop (== Just dd)
-      if (not b) then do
-        putDecision prop (Just dd)
-        return dd
-      else do
-        dd' <- liftIO randomDecision
-        putDecision prop (Just dd')
-        return dd'
+      if (not b)
+        then return dd
+        else renderDecision prop  -- re-render if the same decision is already made for another property
+
 
 -- bipartite system
 (⨷) :: (Property -> M Decision) 

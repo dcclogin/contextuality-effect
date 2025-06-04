@@ -66,6 +66,7 @@ putDecision prop d = do
 		NumPages  -> paper { numPages = d }
   put newPaper
 
+
 -- unconditional forget
 forgetDecision :: Property -> M ()
 forgetDecision prop = putDecision prop Nothing
