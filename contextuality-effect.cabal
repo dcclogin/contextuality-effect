@@ -25,31 +25,17 @@ source-repository head
 library
   exposed-modules:
       Concur.Effect
-      Concur.ExperimentRG
-      Concur.ExprRGConcur
-      Concur.InterpRG
-      Concur.ObservableRG
       Cont.Effect
-      Cont.ExperimentRG
-      Cont.ExprRGCont
-      Cont.InterpRG
-      Cont.ObservableRG
+      Cont.PaperNothing
+      Cont.PaperOthing
       Lib
       M
       ManufacturingQC
       MerminCubes
       PaperReview
-      Pure.ExperimentRG
-      Pure.ObservableRG
-      RandomUtils
       State.Appearance
-      State.Effect
-      State.ExperimentRG
-      State.InterpRG
-      State.ObservableRG
       State.PaperForget
       State.PaperNothing
-      SyntaxRG
   other-modules:
       Paths_contextuality_effect
   autogen-modules:

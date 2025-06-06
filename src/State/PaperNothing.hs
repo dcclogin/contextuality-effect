@@ -113,7 +113,8 @@ sys prop = do
       b <- crecallDecision prop (== Just dd)
       if (not b)
         then return dd
-        else renderDecision prop  -- re-render if the same decision is already made for another property
+        else renderDecision prop
+        -- re-render if the same decision is already made for another property
 
 
 -- bipartite system
