@@ -25,6 +25,7 @@ source-repository head
 library
   exposed-modules:
       Concur.Effect
+      Config
       Cont.Effect
       Cont.PaperNothing
       Cont.PaperOthing
@@ -33,6 +34,8 @@ library
       ManufacturingQC
       MerminCubes
       PaperReview
+      PBA
+      Pure.PaperSomething
       State.Appearance
       State.PaperForget
       State.PaperNothing
