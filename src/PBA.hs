@@ -3,7 +3,9 @@ module PBA where
 import Config
 
 -- Query is a partial Boolean algebra
-data Query = P Property
+data Query = TT | FF
+  | LL Property
+  | RR Property
   | Not Query
   | And Query Query
   | Or Query Query

@@ -36,6 +36,7 @@ library
       PaperReview
       PBA
       Pure.PaperSomething
+      Pure.SuperDeterminism
       State.Appearance
       State.PaperForget
       State.PaperNothing
