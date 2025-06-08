@@ -17,6 +17,9 @@ import Config
 ---- it is insane to precompute the rendered 2D image for <every possible camera angle/pov>
 
 
+-- This is probably not what physicist called <superdeterminism>
+---- see the blog post <The Forgotten Solution: Superdeterminism>
+
 data SuperPaper = SuperPaper {
     marginsANDmargins   :: (Decision, Decision)
   , fontSizeANDfontSize :: (Decision, Decision)

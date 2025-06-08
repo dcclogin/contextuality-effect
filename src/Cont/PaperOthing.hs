@@ -69,3 +69,16 @@ runTrial = do
 main :: IO ()
 main = do
   printStats "(Continuation, Othing)" 8000 runTrial
+
+
+
+-- [TODO] explore connection to <call-by-need> vs.<eager computation> as in PL
+---- currently the concept <by-need> is not explicitly realized in semantics
+
+
+-- [TODO] need to accommodate this model with interpretations in physics
+---- candidate theory: retrocausality
+
+
+-- in Mermin's experiment, the detector flashes instantly the moment the particle arrives
+-- while here there is suspension and synchronisation happenining according to the semantics
