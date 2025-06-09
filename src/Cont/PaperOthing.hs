@@ -42,10 +42,17 @@ sys prop = do
     return $ protocol yours mine1 mine2
 
 
-inspect2 :: (Property, Property) -> IO (Decision, Decision)
-inspect2 (prop1, prop2) = do
-  Susp pixel1 k1 <- sys prop1
-  Susp pixel2 k2 <- sys prop2
+type Copy = Property -> IO (M Decision)
+
+
+source :: IO (Copy, Copy)
+source = return (sys, sys)
+
+
+inspect2 :: (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
+inspect2 (copy1, copy2) (prop1, prop2) = do
+  Susp pixel1 k1 <- copy1 prop1
+  Susp pixel2 k2 <- copy2 prop2
   let Result dd1 = k1 pixel2
       Result dd2 = k2 pixel1 in
     return (dd1, snd pixel2)
@@ -57,8 +64,8 @@ runTrial :: IO ReviewerAgreement
 runTrial = do
   p1 <- randomProperty
   p2 <- randomProperty
-  -- paper <- randomPaper
-  (d1, d2) <- inspect2 (p1, p2)
+  (copy1, copy2) <- source
+  (d1, d2) <- inspect2 (copy1, copy2) (p1, p2)
   let sameProperty = p1 == p2
       sameDecision = d1 == d2
   return (sameProperty, sameDecision)

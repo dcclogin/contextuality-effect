@@ -9,11 +9,6 @@ import Control.Monad.State.Lazy
 -- may be compared to Spekken's toy model and <knowledge-balance principle>
 
 
--- Source gives the same paper to both reviewers
-source :: IO (Paper, Paper)
-source = do paper <- randomPaper; return (paper, paper)
-
-
 -- nonlocal hidden variable as state monad
 -- type M = State Paper
 type M = StateT Paper IO
@@ -106,13 +101,22 @@ sys prop = do
   return (d1, d2)
 
 
+-- Paper Excutable|Appearance|For Us
+type Copy = Property -> M Decision
 
-inspect1 :: Paper -> Property -> IO Decision
-inspect1 paper prop = evalStateT (sys prop) paper
 
-inspect2 :: Paper -> (Property, Property) -> IO (Decision, Decision)
-inspect2 paper (prop1, prop2) =
-	let m = (sys ⨷ sys) (prop1, prop2) in 
+-- Source gives the same paper to both reviewers
+source :: IO (Copy, Copy)
+source = return (sys, sys)
+
+
+inspect1 :: Paper -> Copy -> Property -> IO Decision
+inspect1 paper copy prop = evalStateT (copy prop) paper
+
+
+inspect2 :: Paper -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
+inspect2 paper (copy1, copy2) (prop1, prop2) =
+	let m = (copy1 ⨷ copy2) (prop1, prop2) in 
 		evalStateT m paper
 
 
@@ -122,7 +126,8 @@ runTrial = do
   p1 <- randomProperty
   p2 <- randomProperty
   paper <- randomPaper
-  (d1, d2) <- inspect2 paper (p1, p2)
+  (copy1, copy2) <- source
+  (d1, d2) <- inspect2 paper (copy1, copy2) (p1, p2)
   let sameProperty = p1 == p2
       sameDecision = d1 == d2
   return (sameProperty, sameDecision)
@@ -133,3 +138,6 @@ runTrial = do
 main :: IO ()
 main = do
   printStats "(State, Forget)" 10000 runTrial
+
+
+-- [TODO] connection to <call-by-reference> as in PL

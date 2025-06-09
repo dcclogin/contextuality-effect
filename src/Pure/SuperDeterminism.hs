@@ -20,6 +20,8 @@ import Config
 -- This is probably not what physicist called <superdeterminism>
 ---- see the blog post <The Forgotten Solution: Superdeterminism>
 ---- also see article <The (Strong) Free Will Theorem>
+---- what this model shares is the idea that "randomness is not that random"
+
 
 data SuperPaper = SuperPaper {
     marginsANDmargins   :: (Decision, Decision)
