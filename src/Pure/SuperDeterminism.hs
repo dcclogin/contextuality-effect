@@ -19,14 +19,18 @@ import Config
 
 -- This is probably not what physicist called <superdeterminism>
 ---- see the blog post <The Forgotten Solution: Superdeterminism>
+---- also see article <The (Strong) Free Will Theorem>
 
 data SuperPaper = SuperPaper {
     marginsANDmargins   :: (Decision, Decision)
   , fontSizeANDfontSize :: (Decision, Decision)
   , numPagesANDnumPages :: (Decision, Decision)
   , marginsANDfontSize  :: (Decision, Decision)
+  , fontSizeANDmargins  :: (Decision, Decision)
   , marginsANDnumPages  :: (Decision, Decision)
+  , numPagesANDmargins  :: (Decision, Decision)
   , fontSizeANDnumPages :: (Decision, Decision)
+  , numPagesANDfontSize :: (Decision, Decision)
 } deriving (Eq, Show)
 
 
@@ -53,6 +57,7 @@ randomDecisionDiff = do
 
 randomSuperPaper :: IO SuperPaper
 randomSuperPaper = SuperPaper <$> randomDecisionSame <*> randomDecisionSame <*> randomDecisionSame
+                              <*> randomDecisionDiff <*> randomDecisionDiff <*> randomDecisionDiff
                               <*> randomDecisionDiff <*> randomDecisionDiff <*> randomDecisionDiff
 
 
@@ -96,11 +101,11 @@ inspect superpaper (p1, p2) = case (p1, p2) of
   (FontSize, FontSize) -> fontSizeANDfontSize superpaper
   (NumPages, NumPages) -> numPagesANDnumPages superpaper
   (Margins, FontSize) -> marginsANDfontSize superpaper
-  (FontSize, Margins) -> marginsANDfontSize superpaper
+  (FontSize, Margins) -> fontSizeANDmargins superpaper
   (Margins, NumPages) -> marginsANDnumPages superpaper
-  (NumPages, Margins) -> marginsANDnumPages superpaper
+  (NumPages, Margins) -> numPagesANDmargins superpaper
   (FontSize, NumPages) -> fontSizeANDnumPages superpaper
-  (NumPages, FontSize) -> fontSizeANDnumPages superpaper
+  (NumPages, FontSize) -> numPagesANDfontSize superpaper
 
 
 runTrial :: IO ReviewerAgreement
