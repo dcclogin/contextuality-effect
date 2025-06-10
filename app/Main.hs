@@ -6,6 +6,7 @@ import Pure.SuperDeterminism
 import Pure.ContextDependent
 import State.PaperForget
 import State.PaperNothing
+import State.PaperOthing
 import Cont.PaperNothing
 import Cont.PaperOthing
 
@@ -20,6 +21,8 @@ main = do
     State.PaperForget.main
     putStrLn ""
     State.PaperNothing.main
+    putStrLn ""
+    State.PaperOthing.main
     putStrLn ""
     Cont.PaperNothing.main
     putStrLn ""

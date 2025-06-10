@@ -96,3 +96,7 @@ runTrial = do
 main :: IO ()
 main = do
   printStats "(Pure, Superdeterminism II)" 10000 runTrial
+
+
+-- paper source depends on choices of properties (context)
+-- [TODO] choice of properties depend on paper source 
