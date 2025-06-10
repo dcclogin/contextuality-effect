@@ -102,10 +102,11 @@ sys prop = do
 
 
 -- Paper Excutable|Appearance|For Us
+-- alias : Reference
 type Copy = Property -> M Decision
 
 
--- Source gives the same paper to both reviewers
+-- Source gives the same copy to both reviewers
 source :: IO (Copy, Copy)
 source = return (sys, sys)
 

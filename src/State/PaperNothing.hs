@@ -90,6 +90,7 @@ sys prop = do
 
 
 -- Paper Excutable|Appearance|For Us
+-- alias : Reference
 type Copy = Property -> M Decision
 
 
@@ -113,7 +114,7 @@ runTrial :: IO ReviewerAgreement
 runTrial = do
   p1 <- randomProperty
   p2 <- randomProperty
-  paper <- randomPaper
+  -- paper <- randomPaper
   (copy1, copy2) <- source
   (d1, d2) <- inspect2 thePaper (copy1, copy2) (p1, p2)
   let sameProperty = p1 == p2

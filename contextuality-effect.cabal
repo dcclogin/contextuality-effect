@@ -35,11 +35,13 @@ library
       MerminCubes
       PaperReview
       PBA
+      Pure.ContextDependent
       Pure.PaperSomething
       Pure.SuperDeterminism
       State.Appearance
       State.PaperForget
       State.PaperNothing
+      State.PaperOthing
   other-modules:
       Paths_contextuality_effect
   autogen-modules:
