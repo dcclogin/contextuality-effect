@@ -68,6 +68,7 @@ printStats modelName numOfTrial runTrial = do
   printEntry "SameProperty & DiffDecision" (getPct True  False)
   printEntry "DiffProperty & SameDecision" (getPct False True)
   printEntry "DiffProperty & DiffDecision" (getPct False False)
+  putStrLn ""
 
   where
     printEntry label pct = putStrLn $ padRight 35 label ++ showFF pct ++ " %"

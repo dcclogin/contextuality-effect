@@ -14,6 +14,7 @@ getDecision paper prop = case prop of
 -- a Copy is what a Paper appears/discloses its interface to reviewers
 -- a.k.a. what is "observable" of a Paper
 -- intuition: an object's identity is determined fully by a collection of predicates
+-- related: Leibniz's Law => Observational Equivalence
 type Copy = Property -> Decision
 
 

@@ -9,22 +9,19 @@ import State.PaperNothing
 import State.PaperOthing
 import Cont.PaperNothing
 import Cont.PaperOthing
+import Concur.PaperForget
+import Concur.PaperNothing
 
 main :: IO ()
 main = do
     Pure.PaperSomething.main
-    putStrLn ""
     Pure.SuperDeterminism.main
-    putStrLn ""
     Pure.ContextDependent.main
-    putStrLn ""
     State.PaperForget.main
-    putStrLn ""
     State.PaperNothing.main
-    putStrLn ""
     State.PaperOthing.main
-    putStrLn ""
     Cont.PaperNothing.main
-    putStrLn ""
     Cont.PaperOthing.main
-    putStrLn ""
+    Concur.PaperForget.main
+    Concur.PaperNothing.main
+

@@ -25,6 +25,8 @@ source-repository head
 library
   exposed-modules:
       Concur.Effect
+      Concur.PaperForget
+      Concur.PaperNothing
       Config
       Cont.Effect
       Cont.PaperNothing
