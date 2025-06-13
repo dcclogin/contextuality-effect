@@ -58,9 +58,10 @@ randomDecisionDiff = do
 
 
 randomSuperPaper :: IO SuperPaper
-randomSuperPaper = SuperPaper <$> randomDecisionSame <*> randomDecisionSame <*> randomDecisionSame
-                              <*> randomDecisionDiff <*> randomDecisionDiff <*> randomDecisionDiff
-                              <*> randomDecisionDiff <*> randomDecisionDiff <*> randomDecisionDiff
+randomSuperPaper = 
+  SuperPaper <$> randomDecisionSame <*> randomDecisionSame <*> randomDecisionSame
+             <*> randomDecisionDiff <*> randomDecisionDiff <*> randomDecisionDiff
+             <*> randomDecisionDiff <*> randomDecisionDiff <*> randomDecisionDiff
 
 
 {--

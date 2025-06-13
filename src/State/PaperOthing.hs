@@ -75,7 +75,6 @@ runTrial = do
   return (sameProperty, sameDecision)
 
 
-
 -- Main program
 main :: IO ()
 main = do

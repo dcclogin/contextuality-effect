@@ -24,9 +24,12 @@ source-repository head
 
 library
   exposed-modules:
+      Concur.ConcurrencyTest
       Concur.Effect
+      Concur.MyLock
       Concur.PaperForget
       Concur.PaperNothing
+      Concur.PaperOthing
       Config
       Cont.Effect
       Cont.PaperNothing
@@ -40,6 +43,7 @@ library
       Pure.ContextDependent
       Pure.PaperSomething
       Pure.SuperDeterminism
+      Pure.SuperDeterminismProd
       State.Appearance
       State.PaperForget
       State.PaperNothing

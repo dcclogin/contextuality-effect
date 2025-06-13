@@ -11,6 +11,7 @@ import Cont.PaperNothing
 import Cont.PaperOthing
 import Concur.PaperForget
 import Concur.PaperNothing
+import Concur.PaperOthing
 
 main :: IO ()
 main = do
@@ -24,4 +25,5 @@ main = do
     Cont.PaperOthing.main
     Concur.PaperForget.main
     Concur.PaperNothing.main
+    Concur.PaperOthing.main
 

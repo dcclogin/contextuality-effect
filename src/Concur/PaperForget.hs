@@ -1,6 +1,7 @@
 module Concur.PaperForget where
 
 import Config
+import Concur.MyLock (withLock)
 import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Concurrent.Async
@@ -110,9 +111,10 @@ inspect1 paper copy prop = do
 inspect2 :: Paper -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
 inspect2 paper (copy1, copy2) (prop1, prop2) = do
   hvar <- newTVarIO paper
+  lock <- newTVarIO False
   (dec1, dec2) <- concurrently 
-    (runReaderT (copy1 prop1) hvar)
-    (runReaderT (copy2 prop2) hvar)
+    (withLock lock $ runReaderT (copy1 prop1) hvar)
+    (withLock lock $ runReaderT (copy2 prop2) hvar)
   return (dec1, dec2)
 
 

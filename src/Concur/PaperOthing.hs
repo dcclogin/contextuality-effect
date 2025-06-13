@@ -1,6 +1,7 @@
 module Concur.PaperOthing where
 
 import Config
+import Concur.MyLock (withLock)
 import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Concurrent.Async
@@ -11,6 +12,7 @@ import Control.Monad.Reader
 type Pixel = (Property, Decision)
 type ChannelT = TVar (Maybe Pixel)
 type M = ReaderT ChannelT IO
+-- type M = ReaderT ChannelT STM
 
 
 -- render an ad hoc decision for 
@@ -60,9 +62,10 @@ inspect1 copy prop = do
 inspect2 :: (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
 inspect2 (copy1, copy2) (prop1, prop2) = do
   hvar <- newTVarIO Nothing
+  lock <- newTVarIO False
   (dec1, dec2) <- concurrently 
-    (runReaderT (copy1 prop1) hvar)
-    (runReaderT (copy2 prop2) hvar)
+    (withLock lock $ runReaderT (copy1 prop1) hvar)
+    (withLock lock $ runReaderT (copy2 prop2) hvar)
   return (dec1, dec2)
 
 
