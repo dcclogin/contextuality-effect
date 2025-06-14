@@ -78,4 +78,4 @@ runTrial = do
 -- Main program
 main :: IO ()
 main = do
-  printStats "(State, Othing)" 8000 runTrial
+  printStats "(State, Othing)" 12345 runTrial

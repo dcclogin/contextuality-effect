@@ -28,16 +28,25 @@ getDecision prop = do
 putDecision :: Property -> Maybe Decision -> M ()
 putDecision prop d = do
   paper <- get
-  let newPaper = case prop of
+  let updatedPaper = case prop of
 		Margins   -> paper { margins = d }
 		FontSize  -> paper { fontSize = d }
 		NumPages  -> paper { numPages = d }
-  put newPaper
+  put updatedPaper
+
+
+-- render a random decision for a specific property
+renderDecision :: Property -> M Decision
+renderDecision prop = do
+  dd <- liftIO randomDecision
+  putDecision prop (Just dd)
+  return dd
 
 
 -- unconditional forget
 forgetDecision :: Property -> M ()
 forgetDecision prop = putDecision prop Nothing
+
 
 -- conditional forget
 cforgetDecision :: Property -> (Maybe Decision -> Bool) -> M ()
@@ -63,22 +72,6 @@ getDecisionF NumPages = do
   cforgetDecision Margins (== m)
   cforgetDecision FontSize (== m)
   return m
-  
-
--- criteria for Pass/Fail decisions
--- impossible for <Nothing> to appear to the reviewers
-{--
-judgeMargin :: Double -> Decision
-judgeMargin m = if abs (m - 1.0) < 0.25 then Pass else Fail
-
-judgeFontSize :: Double -> Decision
-judgeFontSize fs = if abs (fs - 12.0) < 1.0 then Pass else Fail
-
-judgeNumPages :: Int -> Decision
-judgeNumPages np = if np < 20 then Pass else Fail
---}
-
--- [TODO]: come up with a natural way to express forgetting model
 
 
 -- the main logic for quantum system <appearance>
@@ -86,10 +79,7 @@ sys :: Property -> M Decision
 sys prop = do
   d <- getDecisionF prop
   case d of
-    Nothing -> do
-      dd <- liftIO randomDecision
-      putDecision prop (Just dd)
-      return dd
+    Nothing -> renderDecision prop
     Just dd -> return dd
 
 

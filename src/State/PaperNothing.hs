@@ -36,6 +36,7 @@ renderDecision prop = do
   putDecision prop (Just dd)
   return dd
 
+
 -- stream of random decisions for a property
 -- TODO: integrate with Traversable
 renderDecisions :: Property -> M [Decision]

@@ -35,3 +35,25 @@ At moment 1, we suppose a substantial paper independent of and inaccessible to u
 At moment 2, after our diligently querying, seeking knowledge of it, and finally encountering inconsistencies and contradictions, we unsuppose the knowledge from it, forced to conclude its lacking intrinsic properties. But our inclusion in the picture we see is still blind to us.
 
 At moment 3, we realizes our own contribution to the inconsistent appearances, which serves as a necessary blind spot. The **something** at moment 1 is precisely our inclusion and the process of querying, which was misrecognized by us to be something substantial and transcendental, a priori.
+
+
+### TODOs
+
+```
+-- criteria for Pass/Fail decisions
+-- impossible for <Nothing> to appear to the reviewers
+judgeMargin :: Double -> Decision
+judgeMargin m = if abs (m - 1.0) < 0.25 then Pass else Fail
+
+judgeFontSize :: Double -> Decision
+judgeFontSize fs = if abs (fs - 12.0) < 1.0 then Pass else Fail
+
+judgeNumPages :: Int -> Decision
+judgeNumPages np = if np < 20 then Pass else Fail
+
+-- [TODO]: come up with a natural way to express forgetting model
+```
+
+
+1. define and refine the datatype of reviewers
+2. define and refine the datatype and constraints of source/paper/reference/copy

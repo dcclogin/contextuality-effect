@@ -34,6 +34,14 @@ putDecision prop d = do
   liftIO $ atomically $ writeTVar channel newPaper
 
 
+-- render a random decision for a property
+renderDecision :: Property -> M Decision
+renderDecision prop = do
+  dd <- liftIO randomDecision
+  putDecision prop (Just dd)
+  return dd
+
+
 -- unconditional forget
 forgetDecision :: Property -> M ()
 forgetDecision prop = putDecision prop Nothing
@@ -70,10 +78,7 @@ sys :: Property -> M Decision
 sys prop = do
   d <- getDecisionF prop
   case d of
-    Nothing -> do
-      dd <- liftIO randomDecision
-      putDecision prop (Just dd)
-      return dd
+    Nothing -> renderDecision prop
     Just dd -> return dd
 
 
