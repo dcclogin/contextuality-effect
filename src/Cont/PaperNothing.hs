@@ -6,11 +6,6 @@ import Cont.Effect
 import Control.Monad.Cont
 
 
--- blueprint of all papers rendered on-the-fly
-thePaper :: Paper
-thePaper = Paper Nothing Nothing Nothing
-
-
 -- [TODO]: instead of wrapping a layer of IO on top of M,
 -- define a monad transformer to combine it with IO effects
 type M = Iterator Paper Paper

@@ -10,12 +10,6 @@ import Control.Monad.State.Lazy
 type M = StateT Paper IO
 
 
--- <The Paper> has no intrinsic properties
--- There is only one indistinguishable paper which appears differently 
-thePaper :: Paper
-thePaper = Paper Nothing Nothing Nothing
-
-
 getDecision :: Property -> M (Maybe Decision)
 getDecision prop = do
   paper <- get
@@ -99,14 +93,15 @@ source :: IO (Copy, Copy)
 source = return (sys, sys)
 
 
-inspect1 :: Paper -> Copy -> Property -> IO Decision
-inspect1 paper copy prop = evalStateT (copy prop) paper
+inspect1 :: Copy -> Property -> IO Decision
+inspect1 copy prop = evalStateT (copy prop) thePaper
 
 
-inspect2 :: Paper -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect2 paper (copy1, copy2) (prop1, prop2) =
+-- alternative: runStateT
+inspect2 :: (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
+inspect2 (copy1, copy2) (prop1, prop2) =
   let m = (copy1 ⨷ copy2) (prop1, prop2) in 
-    evalStateT m paper
+    evalStateT m thePaper
 
 
 -- Run a single trial
@@ -114,9 +109,8 @@ runTrial :: IO ReviewerAgreement
 runTrial = do
   p1 <- randomProperty
   p2 <- randomProperty
-  -- paper <- randomPaper
   (copy1, copy2) <- source
-  (d1, d2) <- inspect2 thePaper (copy1, copy2) (p1, p2)
+  (d1, d2) <- inspect2 (copy1, copy2) (p1, p2)
   let sameProperty = p1 == p2
       sameDecision = d1 == d2
   return (sameProperty, sameDecision)

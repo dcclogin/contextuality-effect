@@ -16,25 +16,55 @@ data Decision = Fail | Pass
   deriving (Eq, Ord, Show)
 
 -- quantum paper
-data Paper = Paper { margins   :: Maybe Decision
-                   , fontSize  :: Maybe Decision
-                   , numPages  :: Maybe Decision
-                   } deriving (Eq, Show)
+data Paper = Paper { 
+    margins   :: Maybe Decision
+  , fontSize  :: Maybe Decision
+  , numPages  :: Maybe Decision
+} deriving (Eq, Show)
+
+
+-- blueprint for Nothing model (for all papers rendered on-the-fly)
+-- <The Paper> has no intrinsic properties: 
+-- there is only one indistinguishable paper which appears differently 
+thePaper :: Paper
+thePaper = Paper Nothing Nothing Nothing
 
 
 type ReviewerAgreement = (Bool, Bool)  -- (sameProperty, sameDecision)
 
+
+reg :: Bool -> Decision
+reg False = Fail
+reg True  = Pass
+
+
 -- generate a random decision
 randomDecision :: IO Decision
-randomDecision = do
-  b <- randomIO
-  return $ if b then Pass else Fail
+randomDecision = do b <- randomIO; return $ reg b
+
 
 -- generate a random paper with random decisions for each property
 randomPaper :: IO Paper
 randomPaper = Paper <$> (Just <$> randomDecision) 
                     <*> (Just <$> randomDecision) 
                     <*> (Just <$> randomDecision)
+
+
+randomDecision3 :: IO (Decision, Decision, Decision)
+randomDecision3 = do
+  b1 <- randomIO
+  b2 <- randomIO
+  b3 <- randomIO
+  if (b1 == b2) && (b2 == b3)
+    then randomDecision3
+    else return (reg b1, reg b2, reg b3)
+
+
+-- generate a random paper (with 0 probability for PPP and FFF)
+randomPaper0 :: IO Paper
+randomPaper0 = do
+  (dec1, dec2, dec3) <- randomDecision3
+  return $ Paper (Just dec1) (Just dec2) (Just dec3)
 
 
 -- randomly choose a formatting property

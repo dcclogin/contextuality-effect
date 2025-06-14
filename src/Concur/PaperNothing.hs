@@ -13,12 +13,6 @@ type ChannelT = TVar Paper
 type M = ReaderT ChannelT IO
 
 
--- <The Paper> has no intrinsic properties
--- There is only one indistinguishable paper (blueprint) which appears differently 
-thePaper :: Paper
-thePaper = Paper Nothing Nothing Nothing
-
-
 getDecision :: Property -> M (Maybe Decision)
 getDecision prop = do
   channel <- ask
@@ -88,15 +82,15 @@ source :: IO (Copy, Copy)
 source = return (sys, sys)
 
 
-inspect1 :: Paper -> Copy -> Property -> IO Decision
-inspect1 paper copy prop = do
-  hvar <- newTVarIO paper
+inspect1 :: Copy -> Property -> IO Decision
+inspect1 copy prop = do
+  hvar <- newTVarIO thePaper
   runReaderT (copy prop) hvar
 
 
-inspect2 :: Paper -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect2 paper (copy1, copy2) (prop1, prop2) = do
-  hvar <- newTVarIO paper
+inspect2 :: (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
+inspect2 (copy1, copy2) (prop1, prop2) = do
+  hvar <- newTVarIO thePaper
   lock <- newTVarIO False
   (dec1, dec2) <- concurrently 
     (withLock lock $ runReaderT (copy1 prop1) hvar)
@@ -109,9 +103,8 @@ runTrial :: IO ReviewerAgreement
 runTrial = do
   p1 <- randomProperty
   p2 <- randomProperty
-  -- paper <- randomPaper
   (copy1, copy2) <- source
-  (d1, d2) <- inspect2 thePaper (copy1, copy2) (p1, p2)
+  (d1, d2) <- inspect2 (copy1, copy2) (p1, p2)
   let sameProperty = p1 == p2
       sameDecision = d1 == d2
   return (sameProperty, sameDecision)

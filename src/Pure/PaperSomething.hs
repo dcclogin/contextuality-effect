@@ -4,6 +4,9 @@ import Config
 import Control.Monad.Identity
 
 
+-- Something is hidden
+
+
 getDecision :: Paper -> Property -> Maybe Decision
 getDecision paper prop = case prop of
   Margins   -> margins paper
@@ -46,6 +49,7 @@ runTrial :: IO ReviewerAgreement
 runTrial = do
   p1 <- randomProperty
   p2 <- randomProperty
+  -- paper <- randomPaper0 -- lowest possible classical agreement
   paper <- randomPaper
   (copy1, copy2) <- makeCopy paper
   (d1, d2) <- inspect2 (copy1, copy2) (p1, p2)

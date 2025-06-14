@@ -5,7 +5,9 @@ import System.Random
 import Control.Monad.State.Lazy
 
 
--- cannot have 3 determinate properties at the same time
+-- probablistic contextuality: cannot have 3 determinate properties at the same time
+-- strong contextuality: will lead to formal contradiction, global inconsistency
+
 -- may be compared to Spekken's toy model and <knowledge-balance principle>
 
 
@@ -43,6 +45,7 @@ cforgetDecision prop pred = do
   d <- getDecision prop
   if pred d then forgetDecision prop else return ()
 
+
 -- forgetful-get
 getDecisionF :: Property -> M (Maybe Decision)
 getDecisionF Margins = do
@@ -61,7 +64,6 @@ getDecisionF NumPages = do
   cforgetDecision FontSize (== m)
   return m
   
-
 
 -- criteria for Pass/Fail decisions
 -- impossible for <Nothing> to appear to the reviewers

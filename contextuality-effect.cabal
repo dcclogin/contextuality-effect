@@ -44,7 +44,8 @@ library
       Pure.PaperSomething
       Pure.SuperDeterminism
       Pure.SuperDeterminismProd
-      State.Appearance
+      Singleton.Nothing
+      Singleton.Something
       State.PaperForget
       State.PaperNothing
       State.PaperOthing

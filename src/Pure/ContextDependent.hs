@@ -5,11 +5,6 @@ import Config
 -- alternative model of superdeterminism
 
 
--- blueprint for all papers
-thePaper :: Paper
-thePaper = Paper Nothing Nothing Nothing
-
-
 randomDecisionSame, randomDecisionDiff :: IO (Decision, Decision)
 randomDecisionSame = do dec <- randomDecision; return (dec, dec)
 randomDecisionDiff = do 
