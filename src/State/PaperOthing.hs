@@ -48,31 +48,55 @@ sys prop = do
 type Copy = Property -> M Decision
 
 
+data Reviewer = Reviewer { 
+  choice :: IO Property
+}
+
+data Trial s c = Trial {
+    source    :: Maybe s
+  , copies    :: IO (c, c)
+  , reviewers :: (Reviewer, Reviewer)
+}
+
+data Outcome = Outcome {
+    property :: Property
+  , decision :: Decision
+}
+
+
 -- Source gives a copy of paper to both reviewers
-source :: IO (Copy, Copy)
-source = return (sys, sys)
+makeCopy :: IO (Copy, Copy)
+makeCopy = return (sys, sys)
 
 
-inspect1 :: Copy -> Property -> IO Decision
-inspect1 copy prop = evalStateT (copy prop) Nothing
+getOutcomes :: Trial Pixel Copy -> IO (Outcome, Outcome)
+getOutcomes t = do
+  (copy1, copy2) <- copies t
+  prop1 <- choice $ fst $ reviewers t
+  prop2 <- choice $ snd $ reviewers t
+  let m = (copy1 ⨷ copy2) (prop1, prop2)
+  (dec1, dec2) <- evalStateT m (source t)
+  return (Outcome prop1 dec1, Outcome prop2 dec2)
 
 
-inspect2 :: (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect2 (copy1, copy2) (prop1, prop2) =
-  let m = (copy1 ⨷ copy2) (prop1, prop2) in 
-    evalStateT m Nothing
+getAgreement :: IO (Outcome, Outcome) -> IO ReviewerAgreement
+getAgreement outcomes = do
+  (o1, o2) <- outcomes
+  let sameProperty = (property o1 == property o2)
+      sameDecision = (decision o1 == decision o2)
+  return (sameProperty, sameDecision)
 
 
--- Run a single trial
 runTrial :: IO ReviewerAgreement
 runTrial = do
-  p1 <- randomProperty
-  p2 <- randomProperty
-  (copy1, copy2) <- source
-  (d1, d2) <- inspect2 (copy1, copy2) (p1, p2)
-  let sameProperty = p1 == p2
-      sameDecision = d1 == d2
-  return (sameProperty, sameDecision)
+  let r1 = Reviewer randomProperty
+      r2 = Reviewer randomProperty
+      t  = Trial {
+          source = Nothing
+        , copies = makeCopy
+        , reviewers = (r1, r2)
+      } 
+  getAgreement $ getOutcomes t
 
 
 -- Main program

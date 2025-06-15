@@ -1,8 +1,8 @@
 ### Forget Model + Nothing Model + Othing Model
 
 There is some correlation between **existence** and **ignorance**:
-- A paper ignored (i.e. inspected by none) remains its full existence (no property forgotten).
-- As our knowledge of it grows, its existence necessarily gets blurred (property forgotten).
+- A paper ignored (i.e. inspected by none) remains its full *immediate* existence (no property forgotten).
+- As our knowledge of it grows via measurement, its existence necessarily gets blurred (property forgotten).
 
 Hence it adds to the two common ideologies regarding their relationship: 
 1. **Cliché materialism**, or objective realism: Things exist independent of our knowledge of them.
@@ -17,6 +17,12 @@ The key is to think of this weird thing (with the type `Paper`) in such a way th
 - ...to put it in dialectics, we are a moment of paper's self-realizing/antagonizing process.
 - ...hence the gap separates/divides paper and us paradoxically unites/unifies both.
 - ...this is what the motto of dialectics, **Two divides into One** means.
+
+```haskell
+type Copy = Property -> M Decision
+```
+
+As the type reveals, a `Copy` of `Paper` is still much a collection of predicates, but it is in the form of an effectful function, not a static, immediate map. It is hence a *process* that must be initialized via the action of measurement and inspection from reviewers' side.
 
 Meanwhile, this weird thing also serves as a mirror/mediation of our attempt/interest to know.
 - recall the suprise 20 questions, the answer starts with **nothing**.
