@@ -5,13 +5,7 @@ import Control.Monad.Identity
 
 
 -- Something is hidden
-
-
-getDecision :: Paper -> Property -> Maybe Decision
-getDecision paper prop = case prop of
-  Margins   -> margins paper
-  FontSize  -> fontSize paper
-  NumPages  -> numPages paper
+type HiddenVar = Paper
 
 
 -- a Copy is what a Paper appears/discloses its interface to reviewers
@@ -26,36 +20,43 @@ cp :: Paper -> Copy
 cp paper = \prop -> case getDecision paper prop of
   Just dec -> dec
   Nothing  -> error "internal bug." 
+  where
+    getDecision :: Paper -> Property -> Maybe Decision
+    getDecision paper prop = case prop of
+      Margins   -> margins paper
+      FontSize  -> fontSize paper
+      NumPages  -> numPages paper
 
 
-makeCopy :: Paper -> IO (Copy, Copy)
-makeCopy paper = return (cp paper, cp paper)
+makeCopy :: IO Paper -> IO (Copy, Copy)
+makeCopy sc = do paper <- sc; return (cp paper, cp paper)
 
 
--- Inspection
-inspect :: Copy -> Property -> IO Decision
-inspect copy prop = return $ copy prop
+inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
+inspect hvar (copy1, copy2) (prop1, prop2) = return (copy1 prop1, copy2 prop2)
 
 
-inspect2 :: (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect2 (copy1, copy2) (prop1, prop2) = do
-  dec1 <- inspect copy1 prop1
-  dec2 <- inspect copy2 prop2
-  return (dec1, dec2)
+execute :: Trial HiddenVar Copy -> IO (Outcome, Outcome)
+execute tr = do
+  hvar <- source tr
+  (copy1, copy2) <- copies tr
+  prop1 <- choice $ fst $ reviewers tr
+  prop2 <- choice $ snd $ reviewers tr
+  (dec1, dec2) <- inspect hvar (copy1, copy2) (prop1, prop2)
+  return (Outcome prop1 dec1, Outcome prop2 dec2)
 
 
--- Run a single trial
 runTrial :: IO ReviewerAgreement
 runTrial = do
-  p1 <- randomProperty
-  p2 <- randomProperty
-  -- paper <- randomPaper0 -- lowest possible classical agreement
-  paper <- randomPaper
-  (copy1, copy2) <- makeCopy paper
-  (d1, d2) <- inspect2 (copy1, copy2) (p1, p2)
-  let sameProperty = p1 == p2
-      sameDecision = d1 == d2
-  return (sameProperty, sameDecision)
+  let r1 = Reviewer randomProperty
+      r2 = Reviewer randomProperty
+      sc = randomPaper
+      tr = Trial {
+          source = sc
+        , copies = makeCopy sc
+        , reviewers = (r1, r2)
+      } 
+  getAgreement $ execute tr
 
 
 main :: IO ()

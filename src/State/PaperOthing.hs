@@ -6,7 +6,8 @@ import Control.Monad.State.Lazy
 
 
 type Pixel = (Property, Decision)
-type M = StateT (Maybe Pixel) IO
+type HiddenVar = Maybe Pixel
+type M = StateT HiddenVar IO
 
 
 -- render an ad hoc decision for 
@@ -48,55 +49,32 @@ sys prop = do
 type Copy = Property -> M Decision
 
 
-data Reviewer = Reviewer { 
-  choice :: IO Property
-}
-
-data Trial s c = Trial {
-    source    :: Maybe s
-  , copies    :: IO (c, c)
-  , reviewers :: (Reviewer, Reviewer)
-}
-
-data Outcome = Outcome {
-    property :: Property
-  , decision :: Decision
-}
-
-
--- Source gives a copy of paper to both reviewers
-makeCopy :: IO (Copy, Copy)
-makeCopy = return (sys, sys)
-
-
-getOutcomes :: Trial Pixel Copy -> IO (Outcome, Outcome)
-getOutcomes t = do
-  (copy1, copy2) <- copies t
-  prop1 <- choice $ fst $ reviewers t
-  prop2 <- choice $ snd $ reviewers t
+inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
+inspect hvar (copy1, copy2) (prop1, prop2) = do
   let m = (copy1 ⨷ copy2) (prop1, prop2)
-  (dec1, dec2) <- evalStateT m (source t)
+  evalStateT m hvar
+
+
+execute :: Trial HiddenVar Copy -> IO (Outcome, Outcome)
+execute tr = do
+  hvar <- source tr
+  (copy1, copy2) <- copies tr
+  prop1 <- choice $ fst $ reviewers tr
+  prop2 <- choice $ snd $ reviewers tr
+  (dec1, dec2) <- inspect hvar (copy1, copy2) (prop1, prop2)
   return (Outcome prop1 dec1, Outcome prop2 dec2)
-
-
-getAgreement :: IO (Outcome, Outcome) -> IO ReviewerAgreement
-getAgreement outcomes = do
-  (o1, o2) <- outcomes
-  let sameProperty = (property o1 == property o2)
-      sameDecision = (decision o1 == decision o2)
-  return (sameProperty, sameDecision)
 
 
 runTrial :: IO ReviewerAgreement
 runTrial = do
   let r1 = Reviewer randomProperty
       r2 = Reviewer randomProperty
-      t  = Trial {
-          source = Nothing
-        , copies = makeCopy
+      tr = Trial {
+          source = return Nothing
+        , copies = return (sys, sys)
         , reviewers = (r1, r2)
       } 
-  getAgreement $ getOutcomes t
+  getAgreement $ execute tr
 
 
 -- Main program

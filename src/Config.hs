@@ -23,14 +23,37 @@ data Paper = Paper {
 } deriving (Eq, Show)
 
 
+data Reviewer = Reviewer { 
+  choice :: IO Property
+}
+
+data Trial s c = Trial {
+    source    :: IO s
+  , copies    :: IO (c, c)
+  , reviewers :: (Reviewer, Reviewer)
+}
+
+data Outcome = Outcome {
+    property :: Property
+  , decision :: Decision
+}
+
+type ReviewerAgreement = (Bool, Bool)  -- (sameProperty, sameDecision)
+
+
+getAgreement :: IO (Outcome, Outcome) -> IO ReviewerAgreement
+getAgreement outcomes = do
+  (o1, o2) <- outcomes
+  let sameProperty = (property o1 == property o2)
+      sameDecision = (decision o1 == decision o2)
+  return (sameProperty, sameDecision)
+
+
 -- blueprint for Nothing model (for all papers rendered on-the-fly)
 -- <The Paper> has no intrinsic properties: 
 -- there is only one indistinguishable paper which appears differently 
 thePaper :: Paper
 thePaper = Paper Nothing Nothing Nothing
-
-
-type ReviewerAgreement = (Bool, Bool)  -- (sameProperty, sameDecision)
 
 
 reg :: Bool -> Decision

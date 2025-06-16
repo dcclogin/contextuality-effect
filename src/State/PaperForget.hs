@@ -13,7 +13,8 @@ import Control.Monad.State.Lazy
 
 -- nonlocal hidden variable as state monad
 -- type M = State Paper
-type M = StateT Paper IO
+type HiddenVar = Paper
+type M = StateT HiddenVar IO
 
 
 getDecision :: Property -> M (Maybe Decision)
@@ -98,33 +99,32 @@ sys prop = do
 type Copy = Property -> M Decision
 
 
--- Source gives the same copy to both reviewers
-source :: IO (Copy, Copy)
-source = return (sys, sys)
-
-
-inspect1 :: Paper -> Copy -> Property -> IO Decision
-inspect1 paper copy prop = evalStateT (copy prop) paper
-
-
-inspect2 :: Paper -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect2 paper (copy1, copy2) (prop1, prop2) =
+inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
+inspect hvar (copy1, copy2) (prop1, prop2) =
 	let m = (copy1 ⨷ copy2) (prop1, prop2) in 
-		evalStateT m paper
+		evalStateT m hvar
 
 
--- Run a single trial
+execute :: Trial HiddenVar Copy -> IO (Outcome, Outcome)
+execute tr = do
+  hvar <- source tr
+  (copy1, copy2) <- copies tr
+  prop1 <- choice $ fst $ reviewers tr
+  prop2 <- choice $ snd $ reviewers tr
+  (dec1, dec2) <- inspect hvar (copy1, copy2) (prop1, prop2)
+  return (Outcome prop1 dec1, Outcome prop2 dec2)
+
+
 runTrial :: IO ReviewerAgreement
 runTrial = do
-  p1 <- randomProperty
-  p2 <- randomProperty
-  paper <- randomPaper
-  (copy1, copy2) <- source
-  (d1, d2) <- inspect2 paper (copy1, copy2) (p1, p2)
-  let sameProperty = p1 == p2
-      sameDecision = d1 == d2
-  return (sameProperty, sameDecision)
-
+  let r1 = Reviewer randomProperty
+      r2 = Reviewer randomProperty
+      tr = Trial {
+          source = randomPaper
+        , copies = return (sys, sys)
+        , reviewers = (r1, r2)
+      } 
+  getAgreement $ execute tr
 
 
 -- Main program

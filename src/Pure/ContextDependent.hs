@@ -3,6 +3,7 @@ module Pure.ContextDependent where
 import Config
 
 -- alternative model of superdeterminism
+type HiddenVar = Paper
 
 
 randomDecisionSame, randomDecisionDiff :: IO (Decision, Decision)
@@ -59,33 +60,38 @@ cp paper = \prop -> case getDecision paper prop of
   Nothing  -> error "internal bug." 
 
 
-makeCopy :: Paper -> IO (Copy, Copy)
-makeCopy paper = return (cp paper, cp paper)
+makeCopy :: IO Paper -> IO (Copy, Copy)
+makeCopy sc = do paper <- sc; return (cp paper, cp paper)
 
 
 -- Inspection
-inspect :: Copy -> Property -> IO Decision
-inspect copy prop = return $ copy prop
+inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
+inspect hvar (copy1, copy2) (prop1, prop2) = return (copy1 prop1, copy2 prop2)
 
 
-inspect2 :: (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect2 (copy1, copy2) (prop1, prop2) = do
-  dec1 <- inspect copy1 prop1
-  dec2 <- inspect copy2 prop2
-  return (dec1, dec2)
+execute :: Trial HiddenVar Copy -> IO (Outcome, Outcome)
+execute tr = do
+  hvar <- source tr
+  (copy1, copy2) <- copies tr
+  prop1 <- choice $ fst $ reviewers tr
+  prop2 <- choice $ snd $ reviewers tr
+  (dec1, dec2) <- inspect hvar (copy1, copy2) (prop1, prop2)
+  return (Outcome prop1 dec1, Outcome prop2 dec2)
 
 
--- Run a single trial
 runTrial :: IO ReviewerAgreement
 runTrial = do
-  p1 <- randomProperty
-  p2 <- randomProperty
-  paper <- randomPaperCtx (p1, p2)
-  (copy1, copy2) <- makeCopy paper
-  (d1, d2) <- inspect2 (copy1, copy2) (p1, p2)
-  let sameProperty = p1 == p2
-      sameDecision = d1 == d2
-  return (sameProperty, sameDecision)
+  prop1 <- randomProperty
+  prop2 <- randomProperty
+  let r1 = Reviewer (return prop1)
+      r2 = Reviewer (return prop2)
+      sc = randomPaperCtx (prop1, prop2)
+      tr = Trial {
+          source = sc
+        , copies = makeCopy sc
+        , reviewers = (r1, r2)
+      } 
+  getAgreement $ execute tr
 
 
 main :: IO ()

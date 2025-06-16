@@ -40,8 +40,8 @@ sys = renderDecision
 
 type Reference = Property -> M Decision
 
-source :: IO Reference
-source = return sys
+source1 :: IO Reference
+source1 = return sys
 
 
 inspect :: Paper -> Reference -> Property -> IO Decision
@@ -52,6 +52,6 @@ runTrial :: IO Decision
 runTrial = do
   prop <- randomProperty
   -- paper <- randomPaper
-  ref <- source
+  ref <- source1
   dec <- inspect thePaper ref prop
   return dec
