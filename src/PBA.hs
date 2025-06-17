@@ -2,10 +2,10 @@ module PBA where
 
 import Config
 
+
 -- Query is a partial Boolean algebra
-data Query = TT | FF
-  | LL Property
-  | RR Property
+data Query = FF | TT
+  | Expect Outcome
   | Not Query
   | And Query Query
   | Or Query Query
@@ -13,5 +13,5 @@ data Query = TT | FF
 
 
 -- [TODO]: implement the binary relation following the paper <the logic of contextuality>
-isCommesurable :: Query -> Query -> Bool
-isCommesurable q1 q2 = False
+isCommeasurable :: Query -> Query -> Bool
+isCommeasurable q1 q2 = False

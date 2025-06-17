@@ -25,7 +25,6 @@ source-repository head
 library
   exposed-modules:
       Concur.ConcurrencyTest
-      Concur.Effect
       Concur.MyLock
       Concur.PaperForget
       Concur.PaperNothing
@@ -46,9 +45,11 @@ library
       Pure.SuperDeterminismProd
       Singleton.Nothing
       Singleton.Something
+      State.PaperCheating
       State.PaperForget
       State.PaperNothing
       State.PaperOthing
+      State.StrongContextuality
   other-modules:
       Paths_contextuality_effect
   autogen-modules:

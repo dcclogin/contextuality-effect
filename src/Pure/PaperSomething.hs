@@ -28,6 +28,10 @@ cp paper = \prop -> case getDecision paper prop of
       NumPages  -> numPages paper
 
 
+obs :: Property -> Paper -> Decision
+obs = flip cp
+
+
 makeCopy :: IO Paper -> IO (Copy, Copy)
 makeCopy sc = do paper <- sc; return (cp paper, cp paper)
 

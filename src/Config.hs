@@ -36,7 +36,7 @@ data Trial s c = Trial {
 data Outcome = Outcome {
     property :: Property
   , decision :: Decision
-}
+} deriving (Eq, Show)
 
 type ReviewerAgreement = (Bool, Bool)  -- (sameProperty, sameDecision)
 
