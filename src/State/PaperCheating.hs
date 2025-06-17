@@ -73,16 +73,6 @@ inspect hvar (copy1, copy2) (prop1, prop2) =
 		evalStateT m (snd hvar)
 
 
-execute :: Trial HiddenVar Copy -> IO (Outcome, Outcome)
-execute tr = do
-  hvar <- source tr
-  (copy1, copy2) <- copies tr
-  prop1 <- choice $ fst $ reviewers tr
-  prop2 <- choice $ snd $ reviewers tr
-  (dec1, dec2) <- inspect hvar (copy1, copy2) (prop1, prop2)
-  return (Outcome prop1 dec1, Outcome prop2 dec2)
-
-
 runTrial :: IO ReviewerAgreement
 runTrial = do
   let r1 = Reviewer randomProperty
@@ -92,8 +82,9 @@ runTrial = do
           source = pp >>= (\paper -> return (paper, Nothing))
         , copies = makeCopy pp
         , reviewers = (r1, r2)
+        , measure = inspect
       } 
-  getAgreement $ execute tr
+  getAgreement $ executeTr tr
 
 
 main :: IO ()

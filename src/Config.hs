@@ -31,6 +31,9 @@ data Trial s c = Trial {
     source    :: IO s
   , copies    :: IO (c, c)
   , reviewers :: (Reviewer, Reviewer)
+  , measure   :: s -> (c, c) 
+                   -> (Property, Property) 
+                   -> IO (Decision, Decision)
 }
 
 data Outcome = Outcome {
@@ -38,7 +41,28 @@ data Outcome = Outcome {
   , decision :: Decision
 } deriving (Eq, Show)
 
+
+type Mod = Outcome -> Outcome
+type ModList = [Mod]
+
+
+-- the order of Mod matters
+applyMod :: Outcome -> ModList -> Outcome
+applyMod o [] = o
+applyMod o (m:ms) = applyMod (m o) ms
+
+
 type ReviewerAgreement = (Bool, Bool)  -- (sameProperty, sameDecision)
+
+
+executeTr :: Trial s c -> IO (Outcome, Outcome)
+executeTr tr = do
+  hvar <- source tr
+  (copy1, copy2) <- copies tr
+  prop1 <- choice $ fst $ reviewers tr
+  prop2 <- choice $ snd $ reviewers tr
+  (dec1, dec2) <- (measure tr) hvar (copy1, copy2) (prop1, prop2)
+  return (Outcome prop1 dec1, Outcome prop2 dec2)
 
 
 getAgreement :: IO (Outcome, Outcome) -> IO ReviewerAgreement

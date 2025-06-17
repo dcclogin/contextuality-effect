@@ -5,7 +5,7 @@ import Config
 
 -- Query is a partial Boolean algebra
 data Query = FF | TT
-  | Expect Outcome
+  | Expected Outcome
   | Not Query
   | And Query Query
   | Or Query Query

@@ -63,3 +63,8 @@ judgeNumPages np = if np < 20 then Pass else Fail
 
 1. define and refine the datatype of reviewers
 2. define and refine the datatype and constraints of source/paper/reference/copy
+
+
+### Extra ideas
+
+1. A program, or even an effectful program as hidden variable in `Property -> M Decision`.
