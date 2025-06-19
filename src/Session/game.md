@@ -17,6 +17,8 @@ Inside the monads `M Decision`, there are interesting computations happening:
 
 In our concurrency model, whoever submitted first will be accepted unconditionally, therefore two monads are racing on their first submission, which mimics the bitcoin mining where the one who has stronger computational force has higher chance to win the race.
 
+In the continuation model, there is synchronisation between two monads, which means the `Judge` have to wait until both monads have already sent their primary mining, and decide who wins the race. Earlier submission can still be the loser. As if there is a sort of retrocausality.
+
 ### Perspective: The `Judge`
 
 The `Judge`'s understanding of the game:

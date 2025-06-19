@@ -5,6 +5,7 @@ import Control.Monad.Identity
 
 
 -- Something is hidden
+-- type alias
 type HiddenVar = Paper
 
 

@@ -1,6 +1,7 @@
 module State.PaperOthing where
 
 import Config
+import Context2
 import System.Random
 import Control.Monad.State.Lazy
 
@@ -35,6 +36,7 @@ sys prop = do
 
 
 -- bipartite system
+{--
 (⨷) :: (Property -> M Decision) 
     -> (Property -> M Decision) 
     -> (Property, Property) -> M (Decision, Decision)
@@ -42,33 +44,40 @@ sys prop = do
   d1 <- sys1 prop1
   d2 <- sys2 prop2
   return (d1, d2)
+--}
 
+{--
+inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
+inspect hvar (copy1, copy2) (prop1, prop2) = do
+  let m = (copy1 ⨷ copy2) (prop1, prop2)
+  evalStateT m hvar
+--}
 
 -- Paper Excutable|Appearance|For Us
 -- alias : Reference
 type Copy = Property -> M Decision
 
 
-inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect hvar (copy1, copy2) (prop1, prop2) = do
-  let m = (copy1 ⨷ copy2) (prop1, prop2)
+inspect' :: HiddenVar -> Context Copy -> Context Property -> IO (Context Decision)
+inspect' hvar cs ps = do
+  let m = sequenceA $ cs <*> ps
   evalStateT m hvar
 
 
-runTrial :: IO ReviewerAgreement
-runTrial = do
+runTrial' :: IO ReviewerAgreement
+runTrial' = do
   let r1 = Reviewer randomProperty
       r2 = Reviewer randomProperty
-      tr = Trial {
-          source = return Nothing
-        , copies = return (sys, sys)
-        , reviewers = (r1, r2)
-        , measure = inspect
-      } 
-  getAgreement $ executeTr tr
+      tr = Trial' {
+          source' = return Nothing
+        , copies' = return (ctx sys sys)
+        , reviewers' = (ctx r1 r2)
+        , measure' = inspect'
+      }
+  getAgreement' $ executeTr' tr
 
 
 -- Main program
 main :: IO ()
 main = do
-  printStats "(State, Othing)" 12345 runTrial
+  printStats "(State, Othing)" 12345 runTrial'

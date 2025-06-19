@@ -30,6 +30,7 @@ library
       Concur.PaperNothing
       Concur.PaperOthing
       Config
+      Context2
       Cont.Effect
       Cont.PaperNothing
       Cont.PaperOthing

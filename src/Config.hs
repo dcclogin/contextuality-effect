@@ -1,5 +1,6 @@
 module Config where
 
+import Context2
 import System.Random
 import System.Environment (getArgs)
 import Control.Monad (replicateM)
@@ -36,6 +37,15 @@ data Trial s c = Trial {
                    -> IO (Decision, Decision)
 }
 
+data Trial' s m = Trial' {
+    source'    :: IO s
+  , copies'    :: IO (Context (Property -> m Decision))
+  , reviewers' :: Context Reviewer
+  , measure'   :: s -> Context (Property -> m Decision) 
+                    -> Context Property 
+                    -> IO (Context Decision)
+}
+
 data Outcome = Outcome {
     property :: Property
   , decision :: Decision
@@ -65,6 +75,15 @@ executeTr tr = do
   return (Outcome prop1 dec1, Outcome prop2 dec2)
 
 
+executeTr' :: Trial' s m -> IO (Context Outcome)
+executeTr' tr = do
+  hvar <- source' tr
+  cs <- copies' tr
+  ps <- sequenceA $ choice <$> reviewers' tr
+  ds <- (measure' tr) hvar cs ps
+  return $ Outcome <$> ps <*> ds
+
+
 getAgreement :: IO (Outcome, Outcome) -> IO ReviewerAgreement
 getAgreement outcomes = do
   (o1, o2) <- outcomes
@@ -73,7 +92,15 @@ getAgreement outcomes = do
   return (sameProperty, sameDecision)
 
 
--- blueprint for Nothing model (for all papers rendered on-the-fly)
+getAgreement' :: IO (Context Outcome) -> IO ReviewerAgreement
+getAgreement' outcomes = do
+  Context (o1, o2) <- outcomes
+  let sameProperty = (property o1 == property o2)
+      sameDecision = (decision o1 == decision o2)
+  return (sameProperty, sameDecision)
+
+
+-- blueprint/mesh for Nothing model (for all papers rendered on-the-fly)
 -- <The Paper> has no intrinsic properties: 
 -- there is only one indistinguishable paper which appears differently 
 thePaper :: Paper
