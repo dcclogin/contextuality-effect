@@ -37,13 +37,16 @@ data Trial s c = Trial {
                    -> IO (Decision, Decision)
 }
 
-data Trial' s m = Trial' {
-    source'    :: IO s
-  , copies'    :: IO (Context (Property -> m Decision))
-  , reviewers' :: Context Reviewer
-  , measure'   :: s -> Context (Property -> m Decision) 
-                    -> Context Property 
-                    -> IO (Context Decision)
+-- reviewer's pov, oblivious to source
+data Model m = Model {
+    copiesOf      :: IO (Context (Property -> m Decision))
+  , reviewersOf   :: Context Reviewer
+  , runContextual :: (Property -> m Decision)
+                  -> Context Property
+                  -> IO (Context Decision)
+  , runNonlocal   :: Context (Property -> m Decision) 
+                  -> Context Property 
+                  -> IO (Context Decision)
 }
 
 data Outcome = Outcome {
@@ -75,12 +78,11 @@ executeTr tr = do
   return (Outcome prop1 dec1, Outcome prop2 dec2)
 
 
-executeTr' :: Trial' s m -> IO (Context Outcome)
-executeTr' tr = do
-  hvar <- source' tr
-  cs <- copies' tr
-  ps <- sequenceA $ choice <$> reviewers' tr
-  ds <- (measure' tr) hvar cs ps
+execNL :: Model m -> IO (Context Outcome)
+execNL model = do
+  cs <- copiesOf model
+  ps <- sequence $ choice <$> reviewersOf model
+  ds <- (runNonlocal model) cs ps
   return $ Outcome <$> ps <*> ds
 
 

@@ -1,4 +1,4 @@
-module State.PaperOthing where
+module State.PaperOthing (sys, run1, run2, Copy) where
 
 import Config
 import Context2
@@ -9,6 +9,14 @@ import Control.Monad.State.Lazy
 type Pixel = (Property, Decision)
 type HiddenVar = Maybe Pixel
 type M = StateT HiddenVar IO
+
+-- Paper Excutable|Appearance|For Us
+-- alias : Reference
+type Copy = Property -> M Decision
+
+
+src :: IO HiddenVar
+src = return Nothing
 
 
 -- render an ad hoc decision for 
@@ -27,7 +35,7 @@ protocol py p1 (_, dec2) = case (py, p1) of
   _ -> error "internal bug."
 
 
-sys :: Property -> M Decision
+sys :: Copy
 sys prop = do
   mine1 <- renderPixel prop -- primary rendering (mandatory)
   mine2 <- renderPixel prop -- secondary rendering (eagerly)
@@ -35,49 +43,25 @@ sys prop = do
   protocol yours mine1 mine2
 
 
--- bipartite system
 {--
-(⨷) :: (Property -> M Decision) 
-    -> (Property -> M Decision) 
-    -> (Property, Property) -> M (Decision, Decision)
-(sys1 ⨷ sys2) (prop1, prop2) = do
-  d1 <- sys1 prop1
-  d2 <- sys2 prop2
-  return (d1, d2)
+getObs :: Context Copy -> Context Property -> Context (M Decision)
+getObs cs ps = cs <*> ps
 --}
 
-{--
-inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect hvar (copy1, copy2) (prop1, prop2) = do
-  let m = (copy1 ⨷ copy2) (prop1, prop2)
-  evalStateT m hvar
---}
 
--- Paper Excutable|Appearance|For Us
--- alias : Reference
-type Copy = Property -> M Decision
+reifyEffect :: M (Context Decision) -> HiddenVar -> IO (Context Decision)
+reifyEffect = evalStateT
 
 
-inspect' :: HiddenVar -> Context Copy -> Context Property -> IO (Context Decision)
-inspect' hvar cs ps = do
-  let m = sequenceA $ cs <*> ps
-  evalStateT m hvar
+-- hiding HiddenVar and export
+run1 :: Copy -> Context Property -> IO (Context Decision)
+run1 c ps = do
+  hvar <- src
+  reifyEffect (traverse c ps) hvar
 
 
-runTrial' :: IO ReviewerAgreement
-runTrial' = do
-  let r1 = Reviewer randomProperty
-      r2 = Reviewer randomProperty
-      tr = Trial' {
-          source' = return Nothing
-        , copies' = return (ctx sys sys)
-        , reviewers' = (ctx r1 r2)
-        , measure' = inspect'
-      }
-  getAgreement' $ executeTr' tr
-
-
--- Main program
-main :: IO ()
-main = do
-  printStats "(State, Othing)" 12345 runTrial'
+-- hiding HiddenVar and export
+run2 :: Context Copy -> Context Property -> IO (Context Decision)
+run2 cs ps = do
+  hvar <- src
+  reifyEffect (sequence $ cs <*> ps) hvar

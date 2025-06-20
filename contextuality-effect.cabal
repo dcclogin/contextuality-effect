@@ -34,6 +34,7 @@ library
       Cont.Effect
       Cont.PaperNothing
       Cont.PaperOthing
+      Experiment
       Lib
       M
       ManufacturingQC

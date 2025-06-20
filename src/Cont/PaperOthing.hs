@@ -4,6 +4,7 @@ import Config
 import System.Random
 import Cont.Effect
 import Control.Monad.Cont
+import Control.Concurrent.Async
 
 
 -- blueprint of all papers rendered on-the-fly
@@ -54,10 +55,15 @@ inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, De
 inspect hvar (copy1, copy2) (prop1, prop2) = do
   Susp pixel1 k1 <- copy1 prop1
   Susp pixel2 k2 <- copy2 prop2
-  let Result dd1 = k1 pixel2
-      Result dd2 = k2 pixel1 in
-    return (dd1, snd pixel2)
-        -- (snd pixel1, dd2)
+  let Result dec1 = k1 pixel2
+      Result dec2 = k2 pixel1
+      proc1 = return (dec1, snd pixel2)
+      proc2 = return (snd pixel1, dec2)
+  winner <- race proc1 proc2  -- let them race!
+  case winner of
+    Left res  -> return res
+    Right res -> return res
+
 
 
 runTrial :: IO ReviewerAgreement

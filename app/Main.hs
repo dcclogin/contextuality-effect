@@ -7,7 +7,8 @@ import Pure.ContextDependent
 import State.PaperCheating
 import State.PaperForget
 import State.PaperNothing
-import State.PaperOthing
+-- import State.PaperOthing
+import Experiment
 import Cont.PaperNothing
 import Cont.PaperOthing
 import Concur.PaperForget
@@ -22,7 +23,8 @@ main = do
     State.PaperCheating.main
     State.PaperForget.main
     State.PaperNothing.main
-    State.PaperOthing.main
+    -- State.PaperOthing.main
+    Experiment.main
     Cont.PaperNothing.main
     Cont.PaperOthing.main
     Concur.PaperForget.main

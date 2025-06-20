@@ -1,6 +1,7 @@
 module Concur.PaperOthing where
 
 import Config
+import Context2
 import Concur.MyLock (withLock)
 import Control.Concurrent
 import Control.Concurrent.STM
@@ -49,13 +50,6 @@ sys prop = do
 type Copy = Property -> M Decision
 
 
-{--
-inspect1 :: Copy -> Property -> IO Decision
-inspect1 copy prop = do
-  hvar <- newTVarIO Nothing
-  runReaderT (copy prop) hvar
---}
-
 
 inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
 inspect hvar (copy1, copy2) (prop1, prop2) = do
@@ -64,6 +58,27 @@ inspect hvar (copy1, copy2) (prop1, prop2) = do
     (withLock lock $ runReaderT (copy1 prop1) hvar)
     (withLock lock $ runReaderT (copy2 prop2) hvar)
   return (dec1, dec2)
+
+
+
+inspect' :: HiddenVar -> Context Copy -> Context Property -> IO (Context Decision)
+inspect' hvar cs ps = do
+  lock <- newTVarIO False
+  mapConcurrently (\m -> withLock lock $ runReaderT m hvar) (cs <*> ps)
+
+
+getObs :: Context Copy -> Context Property -> Context (M Decision)
+getObs cs ps = cs <*> ps
+
+liftEffect :: Context (M Decision) -> M (Context Decision)
+liftEffect = sequence
+
+
+{--
+reifyEffect :: HiddenVar -> M (Context Decision) -> IO (Context Decision)
+reifyEffect hvar m = 
+--}
+
 
 
 runTrial :: IO ReviewerAgreement
@@ -79,8 +94,23 @@ runTrial = do
   getAgreement $ executeTr tr
 
 
+{--
+runTrial' :: IO ReviewerAgreement
+runTrial' = do
+  let r1 = Reviewer randomProperty
+      r2 = Reviewer randomProperty
+      tr = Trial' {
+          source' = newTVarIO Nothing
+        , copies' = return $ Context (sys, sys)
+        , reviewers' = Context (r1, r2)
+        , measure' = inspect'
+      } 
+  getAgreement' $ executeTr' tr
+--}
+
+
 main :: IO ()
 main = do
-  printStats "(Concurrency, Othing)" 10000 runTrial
+  printStats "(Concurrency, Othing)" 12345 runTrial
 
 
