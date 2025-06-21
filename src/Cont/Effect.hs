@@ -16,7 +16,6 @@ instance Applicative (Yield i o r) where
   (Yield mf) <*> (Yield ma) = Yield (mf <*> ma)
 
 instance Monad (Yield i o r) where
-  return a = Yield (return a)
   (Yield m) >>= k = Yield (m >>= \a -> unY (k a))
 
 instance MonadCont (Yield i o r) where
@@ -29,5 +28,3 @@ runYield (Yield m) = runCont m Result
 -- and resumed with an input of type i.
 yield :: o -> Yield i o r i
 yield o = callCC (\k -> Yield (cont (\_ -> Susp o (\i -> runYield (k i)))))
-
-
