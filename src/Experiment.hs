@@ -3,14 +3,18 @@ module Experiment where
 import Config
 import Context2
 import RandomUtils
-import State.PaperCheating (sys2, run2)
+import State.PaperOthing (sys2, run2, label)
 
 
--- pov of 2 reviewers
+-- pov of 2 reviewers:
 -- sys1 :: IO Copy
 -- sys2 :: IO (Context Copy)
 -- run1 :: Copy -> Context Property -> IO (Context Decision)
 -- run2 :: Context Copy -> Context Property -> IO (Context Decision)
+
+-- the reviewers should not know:
+-- src and HiddenVar
+-- whether two copies are the same or not
 
 
 runTrial :: IO ReviewerAgreement
@@ -18,9 +22,9 @@ runTrial = do
   let r1 = Reviewer randomProperty
       r2 = Reviewer randomProperty
       md = Model {
-          copiesOf = sys2
-        , reviewersOf = Context (r1, r2)
-        , runNonlocal = run2
+          copies = sys2
+        , reviewers = Context (r1, r2)
+        , runContext = run2
       }
   getAgreement $ executeModel md
 
@@ -28,4 +32,4 @@ runTrial = do
 -- Main program
 main :: IO ()
 main = do
-  printStats "(Unknown mechanism)" 18000 runTrial
+  printStats label 18367 runTrial

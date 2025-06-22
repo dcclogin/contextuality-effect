@@ -1,9 +1,13 @@
-module State.PaperCheating (sys2, run2) where
+module State.PaperCheating (sys2, run2, label) where
 
 import Config
 import Context2
 import RandomUtils
 import Control.Monad.State.Lazy
+
+
+label :: String
+label = "(State model -- Cheating)"
 
 
 {--

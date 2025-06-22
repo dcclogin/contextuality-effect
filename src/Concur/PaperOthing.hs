@@ -1,4 +1,4 @@
-module Concur.PaperOthing (sys, run1, run2, Copy) where
+module Concur.PaperOthing (sys, sys1, sys2, run1, run2, label) where
 
 import Config
 import Context2
@@ -8,6 +8,10 @@ import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Concurrent.Async
 import Control.Monad.Reader
+
+
+label :: String
+label = "(Cuncurrency model -- Othing)"
 
 
 -- communication channels for two observables
@@ -52,6 +56,13 @@ sys prop = do
   channel <- ask
   yours <- liftIO $ readTVarIO channel
   protocol yours mine1 mine2
+
+
+sys1 :: IO Copy
+sys1 = return sys
+
+sys2 :: IO (Context Copy)
+sys2 = return $ Context (sys, sys)
 
 
 {--

@@ -36,10 +36,12 @@ library
       Cont.PaperNothing
       Cont.PaperOthing
       Experiment
+      ExperimentS
       Lib
       M
       ManufacturingQC
       MerminCubes
+      PaperModel
       PaperReview
       PBA
       Pure.ContextDependent
@@ -49,6 +51,7 @@ library
       RandomUtils
       Singleton.Nothing
       Singleton.Something
+      State.Othing
       State.PaperCheating
       State.PaperForget
       State.PaperNothing

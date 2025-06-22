@@ -1,4 +1,4 @@
-module Pure.ContextDependent where
+module Pure.ContextDependent (dependentSrc, makeCopy, run1S, run2S, label) where
 
 import Config
 import Context2
@@ -6,12 +6,16 @@ import RandomUtils (randomPaperCtx)
 import Control.Monad.Trans.Identity
 
 -- alternative model of superdeterminism
+label :: String
+label = "(Superdeterminism -- context dependent source)"
+
 
 type HiddenVar = Paper
 type M = IdentityT IO
 type Copy = Property -> M Decision
 
 
+-- must be interdependent under the same IO environment
 dependentSrc :: Context Property -> IO HiddenVar
 dependentSrc = randomPaperCtx
 
@@ -38,41 +42,13 @@ makeCopy :: IO Paper -> IO (Context Copy)
 makeCopy s = do paper <- s; return $ Context (cp paper, cp paper)
 
 
--- hiding HiddenVar and export
-run1 :: Copy -> Context Property -> IO (Context Decision)
-run1 c ps = do
-  hvar <- dependentSrc ps
-  runIdentityT (traverse c ps)
+run1S :: HiddenVar -> Copy -> Context Property -> IO (Context Decision)
+run1S hvar c ps = runIdentityT $ traverse c ps
 
 
--- hiding HiddenVar and export
-run2 :: Context Copy -> Context Property -> IO (Context Decision)
-run2 cs ps = do
-  hvar <- dependentSrc ps
-  runIdentityT (sequence $ cs <*> ps)
+run2S :: HiddenVar -> Context Copy -> Context Property -> IO (Context Decision)
+run2S hvar cs ps = runIdentityT $ sequence $ cs <*> ps
 
-
-{--
-runTrial :: IO ReviewerAgreement
-runTrial = do
-  prop1 <- randomProperty
-  prop2 <- randomProperty
-  let r1 = Reviewer (return prop1)
-      r2 = Reviewer (return prop2)
-      sc = randomPaperCtx (prop1, prop2)
-      tr = Trial {
-          source = sc
-        , copies = makeCopy sc
-        , reviewers = (r1, r2)
-        , measure = inspect
-      } 
-  getAgreement $ executeTr tr
-
-
-main :: IO ()
-main = do
-  printStats "(Pure, Superdeterminism II)" 10000 runTrial
---}
 
 -- paper source depends on choices of properties (context)
 -- [TODO] choice of properties depend on paper source 

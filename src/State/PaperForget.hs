@@ -1,9 +1,13 @@
-module State.PaperForget (sys, run1, run2) where
+module State.PaperForget (sys, sys1, sys2, run1, run2, label) where
 
 import Config
 import Context2
 import RandomUtils
 import Control.Monad.State.Lazy
+
+
+label :: String
+label = "(State model -- Forget)"
 
 
 -- probablistic contextuality: cannot have 3 determinate properties at the same time
@@ -93,6 +97,13 @@ sys prop = do
     Just dd -> return dd
 
 
+sys1 :: IO Copy
+sys1 = return sys
+
+sys2 :: IO (Context Copy)
+sys2 = return $ Context (sys, sys)
+
+
 reifyEffect :: M (Context Decision) -> HiddenVar -> IO (Context Decision)
 reifyEffect = evalStateT
 
@@ -110,26 +121,5 @@ run2 cs ps = do
   hvar <- src
   reifyEffect (sequence $ cs <*> ps) hvar
 
-
-
-{--
-runTrial :: IO ReviewerAgreement
-runTrial = do
-  let r1 = Reviewer randomProperty
-      r2 = Reviewer randomProperty
-      tr = Trial {
-          source = randomPaper
-        , copies = return (sys, sys)
-        , reviewers = (r1, r2)
-        , measure = inspect
-      } 
-  getAgreement $ executeTr tr
-
-
--- Main program
-main :: IO ()
-main = do
-  printStats "(State, Forget)" 10000 runTrial
---}
 
 -- [TODO] connection to <call-by-reference> as in PL

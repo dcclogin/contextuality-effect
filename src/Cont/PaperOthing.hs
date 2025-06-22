@@ -1,4 +1,4 @@
-module Cont.PaperOthing (sys, run2) where
+module Cont.PaperOthing (sys, sys1, sys2, run1, run2, label) where
 
 import Config
 import Context2
@@ -6,6 +6,10 @@ import RandomUtils
 import Cont.EffectT
 import Control.Monad.Cont
 import Control.Concurrent.Async
+
+
+label :: String
+label = "(Continuation model -- Othing)"
 
 
 -- Intuition: if thePaper is indeed nothing, then we don't really need a blueprint.
@@ -49,8 +53,28 @@ sys prop = do
   return (protocol yours mine1 mine2)
 
 
+sys1 :: IO Copy
+sys1 = return sys
+
+sys2 :: IO (Context Copy)
+sys2 = return $ Context (sys, sys)
+
+
 -- TODO: it is possible to add a program for <Judge> as a mediator
 -- now the inspect function serves as <Judge> implicitly
+
+
+run1 :: Copy -> Context Property -> IO (Context Decision)
+run1 c ps = do
+  Context (Susp pixel1 k1, Susp pixel2 k2) <- sequence $ fmap runYieldT $ fmap c ps
+  Result dec1 <- k1 pixel2
+  Result dec2 <- k2 pixel1
+  let proc1 = return $ Context (dec1, snd pixel2)
+      proc2 = return $ Context (snd pixel1, dec2)
+  winner <- race proc1 proc2  -- let them race!
+  case winner of
+    Left res  -> return res
+    Right res -> return res
 
 
 run2 :: Context Copy -> Context Property -> IO (Context Decision)
@@ -64,43 +88,6 @@ run2 cs ps = do
   case winner of
     Left res  -> return res
     Right res -> return res
-
-
-{--
-inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect hvar (copy1, copy2) (prop1, prop2) = do
-  Susp pixel1 k1 <- runYieldT $ copy1 prop1
-  Susp pixel2 k2 <- runYieldT $ copy2 prop2
-  Result dec1 <- k1 pixel2
-  Result dec2 <- k2 pixel1
-  let proc1 = return (dec1, snd pixel2)
-      proc2 = return (snd pixel1, dec2)
-  winner <- race proc1 proc2  -- let them race!
-  case winner of
-    Left res  -> return res
-    Right res -> return res
-
-
-
-runTrial :: IO ReviewerAgreement
-runTrial = do
-  let r1 = Reviewer randomProperty
-      r2 = Reviewer randomProperty
-      tr = Trial {
-          source = return ()
-        , copies = return (sys, sys)
-        , reviewers = (r1, r2)
-        , measure = inspect
-      } 
-  getAgreement $ executeTr tr
-
-
-
--- Main program
-main :: IO ()
-main = do
-  printStats "(Continuation, Othing)" 8000 runTrial
---}
 
 
 

@@ -1,4 +1,4 @@
-module Cont.PaperNothing (sys, run2) where
+module Cont.PaperNothing (sys, sys1, sys2, run1, run2, label) where
 
 import Config
 import Context2
@@ -6,6 +6,10 @@ import RandomUtils
 import Cont.EffectT
 import Control.Monad.Cont
 import Control.Concurrent.Async
+
+
+label :: String
+label = "(Continuation model -- Nothing)"
 
 
 -- [TODO]: instead of wrapping a layer of IO on top of M,
@@ -21,9 +25,9 @@ src = return thePaper
 
 
 -- render a paper with an ad hoc decision for just one property
-renderPaper :: Property -> IO Paper
+renderPaper :: Property -> M Paper
 renderPaper prop = do
-  d <- randomDecision
+  d <- liftIO randomDecision
   let paper = case prop of
 		Margins   -> thePaper { margins = Just d }
 		FontSize  -> thePaper { fontSize = Just d }
@@ -63,11 +67,40 @@ compromise prop m1 m2 y =
 
 sys :: Copy
 sys prop = do
-  mine1 <- liftIO $ renderPaper prop -- primary rendering
-  mine2 <- liftIO $ renderPaper prop -- secondary rendering
+  mine1 <- renderPaper prop -- primary rendering
+  mine2 <- renderPaper prop -- secondary rendering
   -- receive yours from, and send mine1 in the <channel>
   yours <- yield mine1
   return (compromise prop mine1 mine2 yours)
+
+
+sys1 :: IO Copy
+sys1 = return sys
+
+sys2 :: IO (Context Copy)
+sys2 = return $ Context (sys, sys)
+
+
+-- workaround
+extractDecision :: Paper -> Decision
+extractDecision paper = case (margins paper, fontSize paper, numPages paper) of
+  (Just dd, _, _) -> dd
+  (_, Just dd, _) -> dd
+  (_, _, Just dd) -> dd
+  _               -> error "internal bug."
+
+
+run1 :: Copy -> Context Property -> IO (Context Decision)
+run1 c ps = do
+  Context (Susp paper1 k1, Susp paper2 k2) <- sequence $ fmap runYieldT $ fmap c ps
+  Result dec1 <- k1 paper2
+  Result dec2 <- k2 paper1
+  let proc1 = return $ Context (dec1, extractDecision paper2)
+      proc2 = return $ Context (extractDecision paper1, dec2)
+  winner <- race proc1 proc2  -- let them race!
+  case winner of
+    Left res  -> return res
+    Right res -> return res
 
 
 run2 :: Context Copy -> Context Property -> IO (Context Decision)
@@ -81,13 +114,6 @@ run2 cs ps = do
   case winner of
     Left res  -> return res
     Right res -> return res
-  where
-    extractDecision :: Paper -> Decision
-    extractDecision paper = case (margins paper, fontSize paper, numPages paper) of
-      (Just dd, _, _) -> dd
-      (_, Just dd, _) -> dd
-      (_, _, Just dd) -> dd
-      _               -> error "internal bug."
 
 
 {--

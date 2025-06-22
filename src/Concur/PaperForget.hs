@@ -10,6 +10,10 @@ import Control.Concurrent.Async
 import Control.Monad.Reader
 
 
+label :: String
+label = "(Cuncurrency model -- Forget)"
+
+
 -- communication channels for two observables
 type ChannelT = TVar Paper
 type M = ReaderT ChannelT IO
@@ -95,6 +99,13 @@ sys prop = do
     Just dd -> return dd
 
 
+sys1 :: IO Copy
+sys1 = return sys
+
+sys2 :: IO (Context Copy)
+sys2 = return $ Context (sys, sys)
+
+
 -- hiding HiddenVar and export
 run1 :: Copy -> Context Property -> IO (Context Decision)
 run1 c ps = do
@@ -109,7 +120,6 @@ run2 cs ps = do
   hvar <- src
   lock <- newTVarIO False
   mapConcurrently (\m -> withLock lock $ runReaderT m hvar) (cs <*> ps)
-
 
 
 

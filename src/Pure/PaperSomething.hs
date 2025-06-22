@@ -1,9 +1,13 @@
-module Pure.PaperSomething (sys2, run1, run2) where
+module Pure.PaperSomething (sys2, run2, label) where
 
 import Config
 import Context2
 import RandomUtils (randomPaper)
 import Control.Monad.Trans.Identity
+
+
+label :: String
+label = "(Identity model -- Intrinsic)"
 
 
 -- Something is hidden

@@ -17,8 +17,10 @@ import Concur.PaperOthing
 
 
 import Experiment
+import ExperimentS
 
 main :: IO ()
 main = do
   Experiment.main
+  ExperimentS.main
 

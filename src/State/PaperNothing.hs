@@ -1,9 +1,13 @@
-module State.PaperNothing (sys, run1, run2) where
+module State.PaperNothing (sys, sys1, sys2, run1, run2, label) where
 
 import Config
 import Context2
 import RandomUtils
 import Control.Monad.State.Lazy
+
+
+label :: String
+label = "(State model -- Nothing)"
 
 
 -- nonlocal hidden variable as state monad
@@ -84,6 +88,13 @@ sys prop = do
         -- re-render if the same decision is already made for another property
 
 
+sys1 :: IO Copy
+sys1 = return sys
+
+sys2 :: IO (Context Copy)
+sys2 = return $ Context (sys, sys)
+
+
 reifyEffect :: M (Context Decision) -> HiddenVar -> IO (Context Decision)
 reifyEffect = evalStateT
 
@@ -100,32 +111,3 @@ run2 :: Context Copy -> Context Property -> IO (Context Decision)
 run2 cs ps = do
   hvar <- src
   reifyEffect (sequence $ cs <*> ps) hvar
-
-
-
-{--
--- alternative: runStateT
-inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect hvar (copy1, copy2) (prop1, prop2) =
-  let m = (copy1 ⨷ copy2) (prop1, prop2) in 
-    evalStateT m hvar
-
-
-runTrial :: IO ReviewerAgreement
-runTrial = do
-  let r1 = Reviewer randomProperty
-      r2 = Reviewer randomProperty
-      tr = Trial {
-          source = return thePaper
-        , copies = return (sys, sys)
-        , reviewers = (r1, r2)
-        , measure = inspect
-      } 
-  getAgreement $ executeTr tr
-
-
--- Main program
-main :: IO ()
-main = do
-  printStats "(State, Nothing)" 10000 runTrial
---}

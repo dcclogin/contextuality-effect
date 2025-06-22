@@ -17,38 +17,29 @@ data Decision = Fail | Pass
   deriving (Eq, Ord, Show)
 
 -- classical paper
+data PaperC = PaperC {
+    marginsC  :: Decision
+  , fontSizeC :: Decision
+  , numPagesC :: Decision
+} deriving (Eq, Show)
 
 -- quantum paper
 data Paper = Paper { 
-    margins   :: Maybe Decision
-  , fontSize  :: Maybe Decision
-  , numPages  :: Maybe Decision
+    margins  :: Maybe Decision
+  , fontSize :: Maybe Decision
+  , numPages :: Maybe Decision
 } deriving (Eq, Show)
 
+data Reviewer = Reviewer { choice :: IO Property }
 
-data Reviewer = Reviewer { 
-  choice :: IO Property
-}
-
-data Trial s c = Trial {
-    source    :: IO s
-  , copies    :: IO (c, c)
-  , reviewers :: (Reviewer, Reviewer)
-  , measure   :: s -> (c, c) 
-                   -> (Property, Property) 
-                   -> IO (Decision, Decision)
-}
-
--- reviewer's pov, oblivious to source
-data Model m = Model {
-    copiesOf      :: IO (Context (Property -> m Decision))
-  , reviewersOf   :: Context Reviewer
-  , runContextual :: (Property -> m Decision)
-                  -> Context Property
-                  -> IO (Context Decision)
-  , runNonlocal   :: Context (Property -> m Decision) 
-                  -> Context Property 
-                  -> IO (Context Decision)
+data (Monad m) => Model s m = Model {
+    source      :: IO s
+  , copies      :: IO (Context (Property -> m Decision))
+  , reviewers   :: Context Reviewer
+  , runSolo     :: (Property -> m Decision) -> Context Property -> IO (Context Decision)
+  , runSoloS    :: s -> (Property -> m Decision) -> Context Property -> IO (Context Decision)
+  , runContext  :: Context (Property -> m Decision) -> Context Property -> IO (Context Decision)
+  , runContextS :: s -> Context (Property -> m Decision) -> Context Property -> IO (Context Decision)
 }
 
 data Outcome = Outcome {
@@ -64,35 +55,36 @@ thePaper :: Paper
 thePaper = Paper Nothing Nothing Nothing
 
 
+{--
 type Mod = Outcome -> Outcome
 type ModList = [Mod]
-
 
 -- the order of Mod matters
 applyMod :: Outcome -> ModList -> Outcome
 applyMod o [] = o
 applyMod o (m:ms) = applyMod (m o) ms
+--}
+
+
+-- pov: reviewers
+executeModel :: (Monad m) => Model s m -> IO (Context Outcome)
+executeModel model = do
+  cs <- copies model
+  ps <- sequence $ choice <$> reviewers model
+  ds <- (runContext model) cs ps
+  return $ Outcome <$> ps <*> ds
+
+-- pov: "objective"
+executeModelS :: (Monad m) => Model s m -> IO (Context Outcome)
+executeModelS model = do
+  hvar <- source model
+  cs <- copies model
+  ps <- sequence $ choice <$> reviewers model
+  ds <- (runContextS model) hvar cs ps
+  return $ Outcome <$> ps <*> ds
 
 
 type ReviewerAgreement = (Bool, Bool)  -- (sameProperty, sameDecision)
-
-
-executeTr :: Trial s c -> IO (Outcome, Outcome)
-executeTr tr = do
-  hvar <- source tr
-  (copy1, copy2) <- copies tr
-  prop1 <- choice $ fst $ reviewers tr
-  prop2 <- choice $ snd $ reviewers tr
-  (dec1, dec2) <- (measure tr) hvar (copy1, copy2) (prop1, prop2)
-  return (Outcome prop1 dec1, Outcome prop2 dec2)
-
-
-executeModel :: Model m -> IO (Context Outcome)
-executeModel model = do
-  cs <- copiesOf model
-  ps <- sequence $ choice <$> reviewersOf model
-  ds <- (runNonlocal model) cs ps
-  return $ Outcome <$> ps <*> ds
 
 
 getAgreement :: IO (Context Outcome) -> IO ReviewerAgreement

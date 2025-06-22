@@ -1,13 +1,11 @@
-module State.PaperOthing (sys, sys1, sys2, run1, run2, label) where
+{-# LANGUAGE FlexibleInstances #-}
+module State.Othing where
 
+import PaperModel
 import Config
 import Context2
 import RandomUtils
 import Control.Monad.State.Lazy
-
-
-label :: String
-label = "(State model -- Othing)"
 
 
 type Pixel = (Property, Decision)
@@ -47,32 +45,9 @@ sys prop = do
   protocol yours mine1 mine2
 
 
-sys1 :: IO Copy
-sys1 = return sys
-
-sys2 :: IO (Context Copy)
-sys2 = return $ Context (sys, sys)
-
-
-{--
-getObs :: Context Copy -> Context Property -> Context (M Decision)
-getObs cs ps = cs <*> ps
---}
-
-
-reifyEffect :: M (Context Decision) -> HiddenVar -> IO (Context Decision)
-reifyEffect = evalStateT
-
-
--- hiding HiddenVar and export
-run1 :: Copy -> Context Property -> IO (Context Decision)
-run1 c ps = do
-  hvar <- src
-  reifyEffect (traverse c ps) hvar
-
-
--- hiding HiddenVar and export
-run2 :: Context Copy -> Context Property -> IO (Context Decision)
-run2 cs ps = do
-  hvar <- src
-  reifyEffect (sequence $ cs <*> ps) hvar
+-- ???
+instance PaperModel M where
+  sys1 = return sys
+  sys2 = return $ Context (sys, sys)
+  run1 c ps = do hvar <- src; evalStateT (traverse c ps) hvar
+  run2 cs ps = do hvar <- src; evalStateT (sequence $ cs <*> ps) hvar
