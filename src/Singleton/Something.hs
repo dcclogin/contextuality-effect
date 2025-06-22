@@ -1,6 +1,7 @@
 module Singleton.Something where
 
 import Config
+import RandomUtils
 
 
 getDecision :: Paper -> Property -> Maybe Decision

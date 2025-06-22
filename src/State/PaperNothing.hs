@@ -1,7 +1,7 @@
 module State.PaperNothing where
 
 import Config
-import System.Random
+import RandomUtils
 import Control.Monad.State.Lazy
 
 

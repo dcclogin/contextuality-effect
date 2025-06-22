@@ -2,7 +2,7 @@ module State.PaperOthing (sys, run1, run2, Copy) where
 
 import Config
 import Context2
-import System.Random
+import RandomUtils
 import Control.Monad.State.Lazy
 
 

@@ -1,6 +1,7 @@
 module Pure.SuperDeterminism where
 
 import Config
+import RandomUtils
 -- import Pure.PaperSomething (inspect)
 
 -- intuition: the statistics can be reconstructed with pure functions
@@ -45,16 +46,6 @@ data CorrPaper = CorrPaper {
   corrDiff :: Double
 }
 --}
-
-
-randomDecisionSame, randomDecisionDiff :: IO (Decision, Decision)
-randomDecisionSame = do dec <- randomDecision; return (dec, dec)
-randomDecisionDiff = do 
-  dec1 <- randomDecision
-  dec2 <- randomDecision
-  if dec1 /= dec2
-    then return (dec1, dec2)
-    else do dec <- randomDecision; return (dec, dec2) -- return (dec1, dec)
 
 
 randomSuperPaper :: IO SuperPaper

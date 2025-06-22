@@ -1,16 +1,18 @@
 module Cont.PaperNothing where
 
 import Config
-import System.Random
-import Cont.Effect
+import RandomUtils
+import Cont.EffectT
 import Control.Monad.Cont
+import Control.Concurrent.Async
 
 
 -- [TODO]: instead of wrapping a layer of IO on top of M,
 -- define a monad transformer to combine it with IO effects
-type M = Iterator Paper Paper
+type M = YieldT Paper Paper Decision IO
 -- type alias
 type HiddenVar = Paper
+type Copy = Property -> M Decision
 
 
 -- render a paper with an ad hoc decision for just one property
@@ -54,45 +56,34 @@ compromise prop m1 m2 y =
     _ -> error "internal bug."   
 
 
-{--
-sys :: Property -> M Decision
-sys prop = runYield $ do
-  mine <- renderPaper prop
-  yours <- yield mine
-  return $ compromise ...
---}
-
-sys :: Property -> IO (M Decision)
+sys :: Copy
 sys prop = do
-  mine1 <- renderPaper prop -- primary rendering
-  mine2 <- renderPaper prop -- secondary rendering
-  return $ runYield $ do
-    -- receive yours from, and send mine1 in the <channel>
-    yours <- yield mine1
-    return $ compromise prop mine1 mine2 yours
-
-
-type Copy = Property -> IO (M Decision)
-
-
--- TODO: bipartite system
+  mine1 <- liftIO $ renderPaper prop -- primary rendering
+  mine2 <- liftIO $ renderPaper prop -- secondary rendering
+  -- receive yours from, and send mine1 in the <channel>
+  yours <- yield mine1
+  return (compromise prop mine1 mine2 yours)
 
 
 inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
 inspect hvar (copy1, copy2) (prop1, prop2) = do
-  Susp paper1 k1 <- copy1 prop1
-  Susp paper2 k2 <- copy2 prop2
-  let Result dd1 = k1 paper2
-      Result dd2 = k2 paper1 in
-    return (dd1, extractDecision paper2)
-        -- (extractDecision paper1, dd2)
+  Susp paper1 k1 <- runYieldT $ copy1 prop1
+  Susp paper2 k2 <- runYieldT $ copy2 prop2
+  Result dd1 <- k1 paper2
+  Result dd2 <- k2 paper1
+  let proc1 = return (dd1, extractDecision paper2)
+      proc2 = return (extractDecision paper1, dd2)
+  winner <- race proc1 proc2  -- let them race!
+  case winner of
+    Left res  -> return res
+    Right res -> return res
   where
     extractDecision :: Paper -> Decision
     extractDecision paper = case (margins paper, fontSize paper, numPages paper) of
       (Just dd, _, _) -> dd
       (_, Just dd, _) -> dd
       (_, _, Just dd) -> dd
-      _              -> error "internal bug."
+      _               -> error "internal bug."
 
 
 runTrial :: IO ReviewerAgreement

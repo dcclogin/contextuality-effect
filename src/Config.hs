@@ -55,6 +55,13 @@ data Outcome = Outcome {
 } deriving (Eq, Show)
 
 
+-- blueprint/mesh for Nothing model (for all papers rendered on-the-fly)
+-- <The Paper> has no intrinsic properties: 
+-- there is only one indistinguishable paper which appears differently 
+thePaper :: Paper
+thePaper = Paper Nothing Nothing Nothing
+
+
 type Mod = Outcome -> Outcome
 type ModList = [Mod]
 
@@ -100,52 +107,6 @@ getAgreement' outcomes = do
   let sameProperty = (property o1 == property o2)
       sameDecision = (decision o1 == decision o2)
   return (sameProperty, sameDecision)
-
-
--- blueprint/mesh for Nothing model (for all papers rendered on-the-fly)
--- <The Paper> has no intrinsic properties: 
--- there is only one indistinguishable paper which appears differently 
-thePaper :: Paper
-thePaper = Paper Nothing Nothing Nothing
-
-
-reg :: Bool -> Decision
-reg False = Fail
-reg True  = Pass
-
-
--- generate a random decision
-randomDecision :: IO Decision
-randomDecision = do b <- randomIO; return $ reg b
-
-
--- generate a random paper with random decisions for each property
-randomPaper :: IO Paper
-randomPaper = Paper <$> (Just <$> randomDecision) 
-                    <*> (Just <$> randomDecision) 
-                    <*> (Just <$> randomDecision)
-
-
-randomDecision3 :: IO (Decision, Decision, Decision)
-randomDecision3 = do
-  b1 <- randomIO
-  b2 <- randomIO
-  b3 <- randomIO
-  if (b1 == b2) && (b2 == b3)
-    then randomDecision3
-    else return (reg b1, reg b2, reg b3)
-
-
--- generate a random paper (with 0 probability for PPP and FFF)
-randomPaper0 :: IO Paper
-randomPaper0 = do
-  (dec1, dec2, dec3) <- randomDecision3
-  return $ Paper (Just dec1) (Just dec2) (Just dec3)
-
-
--- randomly choose a formatting property
-randomProperty :: IO Property
-randomProperty = toEnum <$> randomRIO (0, 2)
 
 
 -- collect statistics

@@ -1,7 +1,7 @@
 module State.PaperCheating where
 
 import Config
-import System.Random
+import RandomUtils
 import Control.Monad.State.Lazy
 
 

@@ -4,6 +4,7 @@ module State.StrongContextuality where
 -- modified from the Othing model
 
 import Config
+import RandomUtils
 import Control.Monad.State.Lazy
 
 

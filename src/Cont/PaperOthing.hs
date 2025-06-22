@@ -1,27 +1,27 @@
 module Cont.PaperOthing where
 
 import Config
-import System.Random
-import Cont.Effect
+import RandomUtils
+import Cont.EffectT
 import Control.Monad.Cont
 import Control.Concurrent.Async
 
-
--- blueprint of all papers rendered on-the-fly
--- thePaper :: Paper
--- thePaper = Paper Nothing Nothing Nothing
 
 -- Intuition: if thePaper is indeed nothing, then we don't really need a blueprint.
 -- instead, we can just render a <partial paper>, or a <pixel> on-the-fly.
 
 type Pixel = (Property, Decision)
-type M = Iterator Pixel Pixel
+type M = YieldT Pixel Pixel Decision IO
+-- in this model HiddenVar is purely redundant
+-- it can be any type
+type HiddenVar = ()
+type Copy = Property -> M Decision
 
 
 -- render an ad hoc decision for 
 -- just one property|predicate|question|attribute|observable
-renderPixel :: Property -> IO Pixel
-renderPixel prop = do d <- randomDecision; return (prop, d)
+renderPixel :: Property -> M Pixel
+renderPixel prop = do d <- liftIO randomDecision; return (prop, d)
 
 
 -- render a paper with an ad hoc decision for just one property
@@ -34,30 +34,25 @@ protocol py p1 (_, dd2) =
     _ -> error "internal bug."
 
 
-sys :: Property -> IO (M Decision)
+sys :: Copy
 sys prop = do
   mine1 <- renderPixel prop -- primary rendering
   mine2 <- renderPixel prop -- secondary rendering
-  return $ runYield $ do
-    yours <- yield mine1 -- receive yours; send mine1
-    return $ protocol yours mine1 mine2
+  yours <- yield mine1 -- receive yours; send mine1
+  return (protocol yours mine1 mine2)
 
 
-type Copy = Property -> IO (M Decision)
-
-
--- in this model HiddenVar is purely redundant
--- it can be any type
-type HiddenVar = ()
+-- TODO: it is possible to add a program for <Judge> as a mediator
+-- now the inspect function serves as <Judge> implicitly
 
 
 inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
 inspect hvar (copy1, copy2) (prop1, prop2) = do
-  Susp pixel1 k1 <- copy1 prop1
-  Susp pixel2 k2 <- copy2 prop2
-  let Result dec1 = k1 pixel2
-      Result dec2 = k2 pixel1
-      proc1 = return (dec1, snd pixel2)
+  Susp pixel1 k1 <- runYieldT $ copy1 prop1
+  Susp pixel2 k2 <- runYieldT $ copy2 prop2
+  Result dec1 <- k1 pixel2
+  Result dec2 <- k2 pixel1
+  let proc1 = return (dec1, snd pixel2)
       proc2 = return (snd pixel1, dec2)
   winner <- race proc1 proc2  -- let them race!
   case winner of

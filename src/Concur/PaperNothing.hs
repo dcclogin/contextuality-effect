@@ -1,6 +1,7 @@
 module Concur.PaperNothing where
 
 import Config
+import RandomUtils
 import Concur.MyLock (withLock)
 import Control.Concurrent
 import Control.Concurrent.STM

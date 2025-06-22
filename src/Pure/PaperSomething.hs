@@ -1,25 +1,32 @@
-module Pure.PaperSomething where
+module Pure.PaperSomething (sys2, run1, run2) where
 
 import Config
-import Control.Monad.Identity
+import Context2
+import RandomUtils (randomPaper)
+import Control.Monad.Trans.Identity
 
 
 -- Something is hidden
 -- type alias
 type HiddenVar = Paper
-
+type M = IdentityT IO
 
 -- a Copy is what a Paper appears/discloses its interface to reviewers
 -- a.k.a. what is "observable" of a Paper
 -- intuition: an object's identity is determined fully by a collection of predicates
 -- related: Leibniz's Law => Observational Equivalence
-type Copy = Property -> Decision
+type Copy = Property -> M Decision
+
+
+src :: IO HiddenVar
+src = randomPaper
 
 
 -- paper is equivalent to a classical hidden variable
+-- Copy is dependent on Paper solely
 cp :: Paper -> Copy
 cp paper = \prop -> case getDecision paper prop of
-  Just dec -> dec
+  Just dec -> return dec
   Nothing  -> error "internal bug." 
   where
     getDecision :: Paper -> Property -> Maybe Decision
@@ -29,32 +36,23 @@ cp paper = \prop -> case getDecision paper prop of
       NumPages  -> numPages paper
 
 
-obs :: Property -> Paper -> Decision
+obs :: Property -> Paper -> M Decision
 obs = flip cp
 
 
-makeCopy :: IO Paper -> IO (Copy, Copy)
-makeCopy sc = do paper <- sc; return (cp paper, cp paper)
+makeCopy :: IO Paper -> IO (Context Copy)
+makeCopy s = do paper <- s; return $ Context (cp paper, cp paper)
 
 
-inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect hvar (copy1, copy2) (prop1, prop2) = return (copy1 prop1, copy2 prop2)
+sys2 :: IO (Context Copy)
+sys2 = makeCopy src
 
 
-runTrial :: IO ReviewerAgreement
-runTrial = do
-  let r1 = Reviewer randomProperty
-      r2 = Reviewer randomProperty
-      sc = randomPaper
-      tr = Trial {
-          source = sc
-        , copies = makeCopy sc
-        , reviewers = (r1, r2)
-        , measure = inspect
-      } 
-  getAgreement $ executeTr tr
+-- hiding HiddenVar and export
+run1 :: Copy -> Context Property -> IO (Context Decision)
+run1 c ps = runIdentityT $ traverse c ps
 
 
-main :: IO ()
-main = do
-  printStats "(Pure)" 10000 runTrial
+-- hiding HiddenVar and export
+run2 :: Context Copy -> Context Property -> IO (Context Decision)
+run2 cs ps = runIdentityT $ sequence $ cs <*> ps

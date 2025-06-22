@@ -2,24 +2,11 @@ module Experiment where
 
 import Config
 import Context2
+import RandomUtils
 import State.PaperOthing (sys, run2)
 
--- it is the pov of reviewers
 
-{--
-runNonlocal :: (Monad m)
-            => Context (Property -> m Decision)
-            -> Context Property
-            -> m (Context Decision)
-runNonlocal cs ps = sequence $ cs <*> ps
-
-
-runContextual :: (Monad m) 
-            => (Property -> m Decision) 
-            -> Context Property 
-            -> m (Context Decision)
-runContextual = traverse
---}
+-- pov of reviewers
 
 
 runTrial :: IO ReviewerAgreement

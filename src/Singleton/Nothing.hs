@@ -1,6 +1,7 @@
 module Singleton.Nothing where
 
 import Config
+import RandomUtils
 import Control.Monad.State.Lazy
 
 
