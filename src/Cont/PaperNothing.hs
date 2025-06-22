@@ -1,6 +1,7 @@
-module Cont.PaperNothing where
+module Cont.PaperNothing (sys, run2) where
 
 import Config
+import Context2
 import RandomUtils
 import Cont.EffectT
 import Control.Monad.Cont
@@ -13,6 +14,10 @@ type M = YieldT Paper Paper Decision IO
 -- type alias
 type HiddenVar = Paper
 type Copy = Property -> M Decision
+
+
+src :: IO HiddenVar
+src = return thePaper
 
 
 -- render a paper with an ad hoc decision for just one property
@@ -65,6 +70,27 @@ sys prop = do
   return (compromise prop mine1 mine2 yours)
 
 
+run2 :: Context Copy -> Context Property -> IO (Context Decision)
+run2 cs ps = do
+  Context (Susp paper1 k1, Susp paper2 k2) <- sequence $ fmap runYieldT $ cs <*> ps
+  Result dec1 <- k1 paper2
+  Result dec2 <- k2 paper1
+  let proc1 = return $ Context (dec1, extractDecision paper2)
+      proc2 = return $ Context (extractDecision paper1, dec2)
+  winner <- race proc1 proc2  -- let them race!
+  case winner of
+    Left res  -> return res
+    Right res -> return res
+  where
+    extractDecision :: Paper -> Decision
+    extractDecision paper = case (margins paper, fontSize paper, numPages paper) of
+      (Just dd, _, _) -> dd
+      (_, Just dd, _) -> dd
+      (_, _, Just dd) -> dd
+      _               -> error "internal bug."
+
+
+{--
 inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
 inspect hvar (copy1, copy2) (prop1, prop2) = do
   Susp paper1 k1 <- runYieldT $ copy1 prop1
@@ -103,7 +129,6 @@ runTrial = do
 main :: IO ()
 main = do
   printStats "(Continuation, Nothing)" 10000 runTrial
-
-  
+--}
 
 

@@ -1,6 +1,7 @@
-module State.PaperForget where
+module State.PaperForget (sys, run1, run2) where
 
 import Config
+import Context2
 import RandomUtils
 import Control.Monad.State.Lazy
 
@@ -15,6 +16,14 @@ import Control.Monad.State.Lazy
 -- type M = State Paper
 type HiddenVar = Paper
 type M = StateT HiddenVar IO
+
+-- Paper Excutable|Appearance|For Us
+-- alias : Reference
+type Copy = Property -> M Decision
+
+
+src :: IO HiddenVar
+src = randomPaper
 
 
 getDecision :: Property -> M (Maybe Decision)
@@ -76,7 +85,7 @@ getDecisionF NumPages = do
 
 
 -- the main logic for quantum system <appearance>
-sys :: Property -> M Decision
+sys :: Copy
 sys prop = do
   d <- getDecisionF prop
   case d of
@@ -84,27 +93,26 @@ sys prop = do
     Just dd -> return dd
 
 
--- bipartite system
-(⨷) :: (Property -> M Decision) 
-    -> (Property -> M Decision) 
-    -> (Property, Property) -> M (Decision, Decision)
-(sys1 ⨷ sys2) (prop1, prop2) = do
-  d1 <- sys1 prop1
-  d2 <- sys2 prop2
-  return (d1, d2)
+reifyEffect :: M (Context Decision) -> HiddenVar -> IO (Context Decision)
+reifyEffect = evalStateT
 
 
--- Paper Excutable|Appearance|For Us
--- alias : Reference
-type Copy = Property -> M Decision
+-- hiding HiddenVar and export
+run1 :: Copy -> Context Property -> IO (Context Decision)
+run1 c ps = do
+  hvar <- src
+  reifyEffect (traverse c ps) hvar
 
 
-inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect hvar (copy1, copy2) (prop1, prop2) =
-	let m = (copy1 ⨷ copy2) (prop1, prop2) in 
-		evalStateT m hvar
+-- hiding HiddenVar and export
+run2 :: Context Copy -> Context Property -> IO (Context Decision)
+run2 cs ps = do
+  hvar <- src
+  reifyEffect (sequence $ cs <*> ps) hvar
 
 
+
+{--
 runTrial :: IO ReviewerAgreement
 runTrial = do
   let r1 = Reviewer randomProperty
@@ -122,6 +130,6 @@ runTrial = do
 main :: IO ()
 main = do
   printStats "(State, Forget)" 10000 runTrial
-
+--}
 
 -- [TODO] connection to <call-by-reference> as in PL

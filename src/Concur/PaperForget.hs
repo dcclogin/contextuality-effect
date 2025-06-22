@@ -1,6 +1,7 @@
-module Concur.PaperForget where
+module Concur.PaperForget (sys, run1, run2) where
 
 import Config
+import Context2
 import RandomUtils
 import Concur.MyLock (withLock)
 import Control.Concurrent
@@ -14,6 +15,15 @@ type ChannelT = TVar Paper
 type M = ReaderT ChannelT IO
 -- type alias
 type HiddenVar = ChannelT
+
+
+-- Paper Excutable|Appearance|For Us
+-- alias : Reference
+type Copy = Property -> M Decision
+
+
+src :: IO HiddenVar
+src = randomPaper >>= (\p -> newTVarIO p)
 
 
 getDecision :: Property -> M (Maybe Decision)
@@ -77,7 +87,7 @@ getDecisionF NumPages = do
 
 
 -- the main logic for quantum system <appearance>
-sys :: Property -> M Decision
+sys :: Copy
 sys prop = do
   d <- getDecisionF prop
   case d of
@@ -85,34 +95,25 @@ sys prop = do
     Just dd -> return dd
 
 
--- bipartite system
-{--
-(⨷) :: (Property -> M Decision) 
-    -> (Property -> M Decision) 
-    -> (Property, Property) -> M (Decision, Decision)
-(sys1 ⨷ sys2) (prop1, prop2) = do
-  paper <- ask
-  hvar <- newTVarIO paper
-  (dec1, dec2) <- concurrently
-    (runReaderT (sys1 prop1) hvar)
-    (runReaderT (sys2 prop2) hvar)
-  return (dec1, dec2)
---}
+-- hiding HiddenVar and export
+run1 :: Copy -> Context Property -> IO (Context Decision)
+run1 c ps = do
+  hvar <- src
+  lock <- newTVarIO False
+  mapConcurrently (\m -> withLock lock $ runReaderT m hvar) (fmap c ps)
 
 
--- Paper Excutable|Appearance|For Us
--- alias : Reference
-type Copy = Property -> M Decision
+-- hiding HiddenVar and export
+run2 :: Context Copy -> Context Property -> IO (Context Decision)
+run2 cs ps = do
+  hvar <- src
+  lock <- newTVarIO False
+  mapConcurrently (\m -> withLock lock $ runReaderT m hvar) (cs <*> ps)
+
+
 
 
 {--
-inspect1 :: Paper -> Copy -> Property -> IO Decision
-inspect1 paper copy prop = do
-  hvar <- newTVarIO paper
-  runReaderT (copy prop) hvar
---}
-
-
 inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
 inspect hvar (copy1, copy2) (prop1, prop2) = do
   lock <- newTVarIO False
@@ -138,3 +139,4 @@ runTrial = do
 main :: IO ()
 main = do
   printStats "(Concurrency, Forget)" 10000 runTrial
+--}

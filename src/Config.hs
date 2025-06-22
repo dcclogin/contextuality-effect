@@ -16,6 +16,8 @@ data Property = Margins | FontSize | NumPages
 data Decision = Fail | Pass
   deriving (Eq, Ord, Show)
 
+-- classical paper
+
 -- quantum paper
 data Paper = Paper { 
     margins   :: Maybe Decision
@@ -85,24 +87,16 @@ executeTr tr = do
   return (Outcome prop1 dec1, Outcome prop2 dec2)
 
 
-execNL :: Model m -> IO (Context Outcome)
-execNL model = do
+executeModel :: Model m -> IO (Context Outcome)
+executeModel model = do
   cs <- copiesOf model
   ps <- sequence $ choice <$> reviewersOf model
   ds <- (runNonlocal model) cs ps
   return $ Outcome <$> ps <*> ds
 
 
-getAgreement :: IO (Outcome, Outcome) -> IO ReviewerAgreement
+getAgreement :: IO (Context Outcome) -> IO ReviewerAgreement
 getAgreement outcomes = do
-  (o1, o2) <- outcomes
-  let sameProperty = (property o1 == property o2)
-      sameDecision = (decision o1 == decision o2)
-  return (sameProperty, sameDecision)
-
-
-getAgreement' :: IO (Context Outcome) -> IO ReviewerAgreement
-getAgreement' outcomes = do
   Context (o1, o2) <- outcomes
   let sameProperty = (property o1 == property o2)
       sameDecision = (decision o1 == decision o2)

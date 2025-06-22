@@ -17,12 +17,8 @@ import Concur.PaperOthing
 
 
 import Experiment
-import Cont.PaperOthing
-import Cont.PaperNothing
 
 main :: IO ()
 main = do
   Experiment.main
-  Cont.PaperOthing.main
-  Cont.PaperNothing.main
 

@@ -1,6 +1,7 @@
-module State.PaperNothing where
+module State.PaperNothing (sys, run1, run2) where
 
 import Config
+import Context2
 import RandomUtils
 import Control.Monad.State.Lazy
 
@@ -9,6 +10,14 @@ import Control.Monad.State.Lazy
 -- type M = State Paper
 type HiddenVar = Paper
 type M = StateT HiddenVar IO
+
+-- Paper Excutable|Appearance|For Us
+-- alias : Reference
+type Copy = Property -> M Decision
+
+
+src :: IO HiddenVar
+src = return thePaper
 
 
 getDecision :: Property -> M (Maybe Decision)
@@ -61,7 +70,7 @@ crecallDecision NumPages pred = do
 
 
 -- decisions are rendered <by need> (TODO: refine the main logic for <nothing>)
-sys :: Property -> M Decision
+sys :: Copy
 sys prop = do
   d <- getDecision prop
   case d of
@@ -75,21 +84,26 @@ sys prop = do
         -- re-render if the same decision is already made for another property
 
 
--- bipartite system
-(⨷) :: (Property -> M Decision) 
-    -> (Property -> M Decision) 
-    -> (Property, Property) -> M (Decision, Decision)
-(sys1 ⨷ sys2) (prop1, prop2) = do
-  d1 <- sys1 prop1
-  d2 <- sys2 prop2
-  return (d1, d2)
+reifyEffect :: M (Context Decision) -> HiddenVar -> IO (Context Decision)
+reifyEffect = evalStateT
 
 
--- Paper Excutable|Appearance|For Us
--- alias : Reference
-type Copy = Property -> M Decision
+-- hiding HiddenVar and export
+run1 :: Copy -> Context Property -> IO (Context Decision)
+run1 c ps = do
+  hvar <- src
+  reifyEffect (traverse c ps) hvar
 
 
+-- hiding HiddenVar and export
+run2 :: Context Copy -> Context Property -> IO (Context Decision)
+run2 cs ps = do
+  hvar <- src
+  reifyEffect (sequence $ cs <*> ps) hvar
+
+
+
+{--
 -- alternative: runStateT
 inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
 inspect hvar (copy1, copy2) (prop1, prop2) =
@@ -114,3 +128,4 @@ runTrial = do
 main :: IO ()
 main = do
   printStats "(State, Nothing)" 10000 runTrial
+--}

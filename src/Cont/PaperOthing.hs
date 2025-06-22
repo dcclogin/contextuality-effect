@@ -1,6 +1,7 @@
-module Cont.PaperOthing where
+module Cont.PaperOthing (sys, run2) where
 
 import Config
+import Context2
 import RandomUtils
 import Cont.EffectT
 import Control.Monad.Cont
@@ -15,7 +16,13 @@ type M = YieldT Pixel Pixel Decision IO
 -- in this model HiddenVar is purely redundant
 -- it can be any type
 type HiddenVar = ()
+
+
 type Copy = Property -> M Decision
+
+
+src :: IO HiddenVar
+src = return ()
 
 
 -- render an ad hoc decision for 
@@ -46,6 +53,20 @@ sys prop = do
 -- now the inspect function serves as <Judge> implicitly
 
 
+run2 :: Context Copy -> Context Property -> IO (Context Decision)
+run2 cs ps = do
+  Context (Susp pixel1 k1, Susp pixel2 k2) <- sequence $ fmap runYieldT $ cs <*> ps
+  Result dec1 <- k1 pixel2
+  Result dec2 <- k2 pixel1
+  let proc1 = return $ Context (dec1, snd pixel2)
+      proc2 = return $ Context (snd pixel1, dec2)
+  winner <- race proc1 proc2  -- let them race!
+  case winner of
+    Left res  -> return res
+    Right res -> return res
+
+
+{--
 inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
 inspect hvar (copy1, copy2) (prop1, prop2) = do
   Susp pixel1 k1 <- runYieldT $ copy1 prop1
@@ -79,6 +100,7 @@ runTrial = do
 main :: IO ()
 main = do
   printStats "(Continuation, Othing)" 8000 runTrial
+--}
 
 
 
