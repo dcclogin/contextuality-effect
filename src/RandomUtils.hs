@@ -14,14 +14,10 @@ import System.Random
 -- mediator between reviewer and paper
 -- plays significant role in superdeterminism models
 
-reg :: Bool -> Decision
-reg False = Fail
-reg True  = Pass
-
 
 -- generate a random decision
 randomDecision :: IO Decision
-randomDecision = do b <- randomIO; return $ reg b
+randomDecision = do b <- randomIO; return $ notD b
 
 
 -- generate a random paper with random decisions for each property

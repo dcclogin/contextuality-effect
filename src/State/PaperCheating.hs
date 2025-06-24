@@ -22,7 +22,6 @@ type HiddenVarC = Paper
 type HiddenVarQ = Maybe Pixel
 type HiddenVar = (HiddenVarC, HiddenVarQ)
 type M = StateT HiddenVarQ IO
-type Copy = Property -> M Decision
 
 
 srcC :: IO HiddenVarC
@@ -52,7 +51,7 @@ protocol py p1 (_, dec2) = case (py, p1) of
   _ -> error "internal bug."
 
 
-cp :: Paper -> Copy
+cp :: Paper -> Copy M
 cp paper = \prop -> do
   case getDecision paper prop of
     Just dec -> do
@@ -63,11 +62,11 @@ cp paper = \prop -> do
     Nothing  -> error "internal bug."
 
 
-makeCopy :: IO Paper -> IO (Context Copy)
+makeCopy :: IO Paper -> IO (Context (Copy M))
 makeCopy s = do paper <- s; return $ Context (cp paper, cp paper)
 
 
-sys2 :: IO (Context Copy)
+sys2 :: IO (Context (Copy M))
 sys2 = makeCopy srcC
 
 
@@ -76,14 +75,14 @@ reifyEffect = evalStateT
 
 
 -- hiding HiddenVar and export
-run1 :: Copy -> Context Property -> IO (Context Decision)
+run1 :: Copy M -> Context Property -> IO (Context Decision)
 run1 c ps = do
   hvar <- srcQ
   reifyEffect (traverse c ps) hvar
 
 
 -- hiding HiddenVar and export
-run2 :: Context Copy -> Context Property -> IO (Context Decision)
+run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
 run2 cs ps = do
   hvar <- srcQ
   reifyEffect (sequence $ cs <*> ps) hvar

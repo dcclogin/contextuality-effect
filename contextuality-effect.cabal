@@ -49,8 +49,6 @@ library
       Pure.SuperDeterminism
       Pure.SuperDeterminismProd
       RandomUtils
-      Singleton.Nothing
-      Singleton.Something
       State.Othing
       State.PaperCheating
       State.PaperForget

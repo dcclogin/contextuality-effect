@@ -22,9 +22,6 @@ type M = YieldT Pixel Pixel Decision IO
 type HiddenVar = ()
 
 
-type Copy = Property -> M Decision
-
-
 src :: IO HiddenVar
 src = return ()
 
@@ -45,7 +42,7 @@ protocol py p1 (_, dd2) =
     _ -> error "internal bug."
 
 
-sys :: Copy
+sys :: Copy M
 sys prop = do
   mine1 <- renderPixel prop -- primary rendering
   mine2 <- renderPixel prop -- secondary rendering
@@ -53,10 +50,10 @@ sys prop = do
   return (protocol yours mine1 mine2)
 
 
-sys1 :: IO Copy
+sys1 :: IO (Copy M)
 sys1 = return sys
 
-sys2 :: IO (Context Copy)
+sys2 :: IO (Context (Copy M))
 sys2 = return $ Context (sys, sys)
 
 
@@ -64,7 +61,7 @@ sys2 = return $ Context (sys, sys)
 -- now the inspect function serves as <Judge> implicitly
 
 
-run1 :: Copy -> Context Property -> IO (Context Decision)
+run1 :: Copy M -> Context Property -> IO (Context Decision)
 run1 c ps = do
   Context (Susp pixel1 k1, Susp pixel2 k2) <- sequence $ fmap runYieldT $ fmap c ps
   Result dec1 <- k1 pixel2
@@ -77,7 +74,7 @@ run1 c ps = do
     Right res -> return res
 
 
-run2 :: Context Copy -> Context Property -> IO (Context Decision)
+run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
 run2 cs ps = do
   Context (Susp pixel1 k1, Susp pixel2 k2) <- sequence $ fmap runYieldT $ cs <*> ps
   Result dec1 <- k1 pixel2

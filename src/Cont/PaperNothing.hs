@@ -17,7 +17,6 @@ label = "(Continuation model -- Nothing)"
 type M = YieldT Paper Paper Decision IO
 -- type alias
 type HiddenVar = Paper
-type Copy = Property -> M Decision
 
 
 src :: IO HiddenVar
@@ -65,7 +64,7 @@ compromise prop m1 m2 y =
     _ -> error "internal bug."   
 
 
-sys :: Copy
+sys :: Copy M
 sys prop = do
   mine1 <- renderPaper prop -- primary rendering
   mine2 <- renderPaper prop -- secondary rendering
@@ -74,10 +73,10 @@ sys prop = do
   return (compromise prop mine1 mine2 yours)
 
 
-sys1 :: IO Copy
+sys1 :: IO (Copy M)
 sys1 = return sys
 
-sys2 :: IO (Context Copy)
+sys2 :: IO (Context (Copy M))
 sys2 = return $ Context (sys, sys)
 
 
@@ -90,7 +89,7 @@ extractDecision paper = case (margins paper, fontSize paper, numPages paper) of
   _               -> error "internal bug."
 
 
-run1 :: Copy -> Context Property -> IO (Context Decision)
+run1 :: Copy M -> Context Property -> IO (Context Decision)
 run1 c ps = do
   Context (Susp paper1 k1, Susp paper2 k2) <- sequence $ fmap runYieldT $ fmap c ps
   Result dec1 <- k1 paper2
@@ -103,7 +102,7 @@ run1 c ps = do
     Right res -> return res
 
 
-run2 :: Context Copy -> Context Property -> IO (Context Decision)
+run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
 run2 cs ps = do
   Context (Susp paper1 k1, Susp paper2 k2) <- sequence $ fmap runYieldT $ cs <*> ps
   Result dec1 <- k1 paper2

@@ -6,9 +6,8 @@ import Data.Traversable
 
 -- homogeneous 2-tuple
 
-newtype Context a
-  = Context {unctx :: ((a, a))}
-    deriving (Eq, Ord, Bounded, Show, Read)
+newtype Context a = Context {unctx :: ((a, a))}
+  deriving (Eq, Ord, Bounded, Show, Read)
 
 ctx x0 x1 = Context (x0, x1)
 {-# INLINE ctx #-}
@@ -28,6 +27,8 @@ instance Monad Context where
   Context (x1, x2) >>= f = 
     Context (case f x1 of Context (y, _) -> y, case f x2 of Context (_, y) -> y)
 
+-- z : <initial state>
+-- related to commutativity of observables
 instance Foldable Context where
   foldr f z (Context (x1, x2)) = f x1 (f x2 z)
   foldl f z (Context (x1, x2)) = f (f z x1) x2

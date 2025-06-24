@@ -14,10 +14,6 @@ type Pixel = (Property, Decision)
 type HiddenVar = Maybe Pixel
 type M = StateT HiddenVar IO
 
--- Paper Excutable|Appearance|For Us
--- alias : Reference
-type Copy = Property -> M Decision
-
 
 src :: IO HiddenVar
 src = return Nothing
@@ -39,7 +35,7 @@ protocol py p1 (_, dec2) = case (py, p1) of
   _ -> error "internal bug."
 
 
-sys :: Copy
+sys :: Copy M
 sys prop = do
   mine1 <- renderPixel prop -- primary rendering (mandatory)
   mine2 <- renderPixel prop -- secondary rendering (eagerly)
@@ -47,10 +43,10 @@ sys prop = do
   protocol yours mine1 mine2
 
 
-sys1 :: IO Copy
+sys1 :: IO (Copy M)
 sys1 = return sys
 
-sys2 :: IO (Context Copy)
+sys2 :: IO (Context (Copy M))
 sys2 = return $ Context (sys, sys)
 
 
@@ -65,14 +61,14 @@ reifyEffect = evalStateT
 
 
 -- hiding HiddenVar and export
-run1 :: Copy -> Context Property -> IO (Context Decision)
+run1 :: Copy M -> Context Property -> IO (Context Decision)
 run1 c ps = do
   hvar <- src
   reifyEffect (traverse c ps) hvar
 
 
 -- hiding HiddenVar and export
-run2 :: Context Copy -> Context Property -> IO (Context Decision)
+run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
 run2 cs ps = do
   hvar <- src
   reifyEffect (sequence $ cs <*> ps) hvar

@@ -17,13 +17,8 @@ label = "(State model -- Forget)"
 
 
 -- nonlocal hidden variable as state monad
--- type M = State Paper
 type HiddenVar = Paper
 type M = StateT HiddenVar IO
-
--- Paper Excutable|Appearance|For Us
--- alias : Reference
-type Copy = Property -> M Decision
 
 
 src :: IO HiddenVar
@@ -89,7 +84,7 @@ getDecisionF NumPages = do
 
 
 -- the main logic for quantum system <appearance>
-sys :: Copy
+sys :: Copy M
 sys prop = do
   d <- getDecisionF prop
   case d of
@@ -97,10 +92,10 @@ sys prop = do
     Just dd -> return dd
 
 
-sys1 :: IO Copy
+sys1 :: IO (Copy M)
 sys1 = return sys
 
-sys2 :: IO (Context Copy)
+sys2 :: IO (Context (Copy M))
 sys2 = return $ Context (sys, sys)
 
 
@@ -109,17 +104,34 @@ reifyEffect = evalStateT
 
 
 -- hiding HiddenVar and export
-run1 :: Copy -> Context Property -> IO (Context Decision)
+run1 :: Copy M -> Context Property -> IO (Context Decision)
 run1 c ps = do
   hvar <- src
   reifyEffect (traverse c ps) hvar
 
 
 -- hiding HiddenVar and export
-run2 :: Context Copy -> Context Property -> IO (Context Decision)
+run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
 run2 cs ps = do
   hvar <- src
   reifyEffect (sequence $ cs <*> ps) hvar
 
 
 -- [TODO] connection to <call-by-reference> as in PL
+
+
+-- this is an causal model
+-- if we set the source to emit only (PPP), we can tell the causal flow
+
+
+-- no concept of quantum states and observables as projectors
+-- is it still possible to express <commutativity>?
+ltor, rtol :: Context Property -> IO HiddenVar -> IO HiddenVar
+ltor = flip $ foldl f
+  where
+    f :: IO HiddenVar -> Property -> IO HiddenVar
+    f s p = do hvar <- s; execStateT (sys p) hvar
+rtol = flip $ foldr f
+  where
+    f :: Property -> IO HiddenVar -> IO HiddenVar
+    f p s = do hvar <- s; execStateT (sys p) hvar

@@ -12,7 +12,6 @@ label = "(Superdeterminism -- context dependent source)"
 
 type HiddenVar = Paper
 type M = IdentityT IO
-type Copy = Property -> M Decision
 
 
 -- must be interdependent under the same IO environment
@@ -22,7 +21,7 @@ dependentSrc = randomPaperCtx
 
 -- paper is equivalent to a classical hidden variable
 -- Copy is dependent on Paper solely
-cp :: Paper -> Copy
+cp :: Paper -> Copy M
 cp paper = \prop -> case getDecision paper prop of
   Just dec -> return dec
   Nothing  -> error "internal bug."
@@ -38,15 +37,15 @@ obs :: Property -> Paper -> M Decision
 obs = flip cp
 
 
-makeCopy :: IO Paper -> IO (Context Copy)
+makeCopy :: IO Paper -> IO (Context (Copy M))
 makeCopy s = do paper <- s; return $ Context (cp paper, cp paper)
 
 
-run1S :: HiddenVar -> Copy -> Context Property -> IO (Context Decision)
+run1S :: HiddenVar -> Copy M -> Context Property -> IO (Context Decision)
 run1S hvar c ps = runIdentityT $ traverse c ps
 
 
-run2S :: HiddenVar -> Context Copy -> Context Property -> IO (Context Decision)
+run2S :: HiddenVar -> Context (Copy M) -> Context Property -> IO (Context Decision)
 run2S hvar cs ps = runIdentityT $ sequence $ cs <*> ps
 
 

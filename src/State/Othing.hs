@@ -12,10 +12,6 @@ type Pixel = (Property, Decision)
 type HiddenVar = Maybe Pixel
 type M = StateT HiddenVar IO
 
--- Paper Excutable|Appearance|For Us
--- alias : Reference
-type Copy = Property -> M Decision
-
 
 src :: IO HiddenVar
 src = return Nothing
@@ -37,7 +33,7 @@ protocol py p1 (_, dec2) = case (py, p1) of
   _ -> error "internal bug."
 
 
-sys :: Copy
+sys :: Copy M
 sys prop = do
   mine1 <- renderPixel prop -- primary rendering (mandatory)
   mine2 <- renderPixel prop -- secondary rendering (eagerly)

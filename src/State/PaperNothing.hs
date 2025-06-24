@@ -15,10 +15,6 @@ label = "(State model -- Nothing)"
 type HiddenVar = Paper
 type M = StateT HiddenVar IO
 
--- Paper Excutable|Appearance|For Us
--- alias : Reference
-type Copy = Property -> M Decision
-
 
 src :: IO HiddenVar
 src = return thePaper
@@ -74,7 +70,7 @@ crecallDecision NumPages pred = do
 
 
 -- decisions are rendered <by need> (TODO: refine the main logic for <nothing>)
-sys :: Copy
+sys :: Copy M
 sys prop = do
   d <- getDecision prop
   case d of
@@ -88,10 +84,10 @@ sys prop = do
         -- re-render if the same decision is already made for another property
 
 
-sys1 :: IO Copy
+sys1 :: IO (Copy M)
 sys1 = return sys
 
-sys2 :: IO (Context Copy)
+sys2 :: IO (Context (Copy M))
 sys2 = return $ Context (sys, sys)
 
 
@@ -100,14 +96,14 @@ reifyEffect = evalStateT
 
 
 -- hiding HiddenVar and export
-run1 :: Copy -> Context Property -> IO (Context Decision)
+run1 :: Copy M -> Context Property -> IO (Context Decision)
 run1 c ps = do
   hvar <- src
   reifyEffect (traverse c ps) hvar
 
 
 -- hiding HiddenVar and export
-run2 :: Context Copy -> Context Property -> IO (Context Decision)
+run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
 run2 cs ps = do
   hvar <- src
   reifyEffect (sequence $ cs <*> ps) hvar

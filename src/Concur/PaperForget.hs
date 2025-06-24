@@ -21,11 +21,6 @@ type M = ReaderT ChannelT IO
 type HiddenVar = ChannelT
 
 
--- Paper Excutable|Appearance|For Us
--- alias : Reference
-type Copy = Property -> M Decision
-
-
 src :: IO HiddenVar
 src = randomPaper >>= (\p -> newTVarIO p)
 
@@ -91,7 +86,7 @@ getDecisionF NumPages = do
 
 
 -- the main logic for quantum system <appearance>
-sys :: Copy
+sys :: Copy M
 sys prop = do
   d <- getDecisionF prop
   case d of
@@ -99,15 +94,15 @@ sys prop = do
     Just dd -> return dd
 
 
-sys1 :: IO Copy
+sys1 :: IO (Copy M)
 sys1 = return sys
 
-sys2 :: IO (Context Copy)
+sys2 :: IO (Context (Copy M))
 sys2 = return $ Context (sys, sys)
 
 
 -- hiding HiddenVar and export
-run1 :: Copy -> Context Property -> IO (Context Decision)
+run1 :: Copy M -> Context Property -> IO (Context Decision)
 run1 c ps = do
   hvar <- src
   lock <- newTVarIO False
@@ -115,7 +110,7 @@ run1 c ps = do
 
 
 -- hiding HiddenVar and export
-run2 :: Context Copy -> Context Property -> IO (Context Decision)
+run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
 run2 cs ps = do
   hvar <- src
   lock <- newTVarIO False
