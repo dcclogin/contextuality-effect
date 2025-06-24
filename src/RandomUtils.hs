@@ -40,7 +40,7 @@ randomPaper0 = do
       b3 <- randomIO
       if (b1 == b2) && (b2 == b3)
         then randomDecision3
-        else return (reg b1, reg b2, reg b3)
+        else return (notD b1, notD b2, notD b3)
 
 
 -- randomly choose a formatting property

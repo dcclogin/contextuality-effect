@@ -41,6 +41,7 @@ library
       M
       ManufacturingQC
       MerminCubes
+      MerminSquare
       PaperModel
       PaperReview
       PBA
