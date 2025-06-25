@@ -31,6 +31,7 @@ library
       Concur.PaperOthing
       Config
       Context2
+      Contextuality
       Cont.Effect
       Cont.EffectT
       Cont.PaperNothing
@@ -42,7 +43,6 @@ library
       ManufacturingQC
       MerminCubes
       MerminSquare
-      PaperModel
       PaperReview
       PBA
       Pure.ContextDependent
@@ -50,9 +50,9 @@ library
       Pure.SuperDeterminism
       Pure.SuperDeterminismProd
       RandomUtils
-      State.Othing
       State.PaperCheating
       State.PaperForget
+      State.PaperForgetLR
       State.PaperNothing
       State.PaperOthing
       State.StrongContextuality

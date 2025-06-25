@@ -63,7 +63,7 @@ sys2 = return $ Context (sys, sys)
 
 run1 :: Copy M -> Context Property -> IO (Context Decision)
 run1 c ps = do
-  Context (Susp pixel1 k1, Susp pixel2 k2) <- sequence $ fmap runYieldT $ fmap c ps
+  Context (Susp pixel1 k1, Susp pixel2 k2) <- traverse runYieldT $ fmap c ps
   Result dec1 <- k1 pixel2
   Result dec2 <- k2 pixel1
   let proc1 = return $ Context (dec1, snd pixel2)
@@ -76,7 +76,7 @@ run1 c ps = do
 
 run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
 run2 cs ps = do
-  Context (Susp pixel1 k1, Susp pixel2 k2) <- sequence $ fmap runYieldT $ cs <*> ps
+  Context (Susp pixel1 k1, Susp pixel2 k2) <- traverse runYieldT $ cs <*> ps
   Result dec1 <- k1 pixel2
   Result dec2 <- k2 pixel1
   let proc1 = return $ Context (dec1, snd pixel2)

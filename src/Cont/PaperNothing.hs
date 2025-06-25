@@ -91,7 +91,7 @@ extractDecision paper = case (margins paper, fontSize paper, numPages paper) of
 
 run1 :: Copy M -> Context Property -> IO (Context Decision)
 run1 c ps = do
-  Context (Susp paper1 k1, Susp paper2 k2) <- sequence $ fmap runYieldT $ fmap c ps
+  Context (Susp paper1 k1, Susp paper2 k2) <- traverse runYieldT $ fmap c ps
   Result dec1 <- k1 paper2
   Result dec2 <- k2 paper1
   let proc1 = return $ Context (dec1, extractDecision paper2)
@@ -104,7 +104,7 @@ run1 c ps = do
 
 run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
 run2 cs ps = do
-  Context (Susp paper1 k1, Susp paper2 k2) <- sequence $ fmap runYieldT $ cs <*> ps
+  Context (Susp paper1 k1, Susp paper2 k2) <- traverse runYieldT $ cs <*> ps
   Result dec1 <- k1 paper2
   Result dec2 <- k2 paper1
   let proc1 = return $ Context (dec1, extractDecision paper2)
@@ -113,47 +113,3 @@ run2 cs ps = do
   case winner of
     Left res  -> return res
     Right res -> return res
-
-
-{--
-inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect hvar (copy1, copy2) (prop1, prop2) = do
-  Susp paper1 k1 <- runYieldT $ copy1 prop1
-  Susp paper2 k2 <- runYieldT $ copy2 prop2
-  Result dd1 <- k1 paper2
-  Result dd2 <- k2 paper1
-  let proc1 = return (dd1, extractDecision paper2)
-      proc2 = return (extractDecision paper1, dd2)
-  winner <- race proc1 proc2  -- let them race!
-  case winner of
-    Left res  -> return res
-    Right res -> return res
-  where
-    extractDecision :: Paper -> Decision
-    extractDecision paper = case (margins paper, fontSize paper, numPages paper) of
-      (Just dd, _, _) -> dd
-      (_, Just dd, _) -> dd
-      (_, _, Just dd) -> dd
-      _               -> error "internal bug."
-
-
-runTrial :: IO ReviewerAgreement
-runTrial = do
-  let r1 = Reviewer randomProperty
-      r2 = Reviewer randomProperty
-      tr = Trial {
-          source = return thePaper
-        , copies = return (sys, sys)
-        , reviewers = (r1, r2)
-        , measure = inspect
-      } 
-  getAgreement $ executeTr tr
-      
-
--- Main program
-main :: IO ()
-main = do
-  printStats "(Continuation, Nothing)" 10000 runTrial
---}
-
-

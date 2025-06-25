@@ -1,5 +1,6 @@
 module Concur.MyLock where
 
+import System.IO.Unsafe
 import Control.Concurrent
 import Control.Concurrent.STM
 
@@ -24,6 +25,14 @@ withLock lock action = do
   atomically $ release lock
   return result
 
+
+{-# NOINLINE globalLock #-}
+globalLock :: Lock
+globalLock = unsafePerformIO (newTVarIO False)
+
+
+atomicIO :: IO a -> IO a
+atomicIO = withLock globalLock
 
 {--
 Note: This seems to be a best workaround.

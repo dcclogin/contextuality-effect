@@ -1,7 +1,11 @@
-module State.PaperForget (sys, sys1, sys2, run1, run2, label) where
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
+module State.PaperForget (
+  sys1, sys2, run1, run1S, run2, run2S, run2A, run2AS, label
+) where
 
 import Config
 import Context2
+import Contextuality
 import RandomUtils
 import Control.Monad.State.Lazy
 
@@ -93,28 +97,20 @@ sys prop = do
 
 
 sys1 :: IO (Copy M)
-sys1 = return sys
+sys1 = distribute1 sys
 
 sys2 :: IO (Context (Copy M))
-sys2 = return $ Context (sys, sys)
+sys2 = distribute2 sys sys
 
 
-reifyEffect :: M (Context Decision) -> HiddenVar -> IO (Context Decision)
-reifyEffect = evalStateT
+instance Contextuality HiddenVar M where
+  run1S s c ps   = evalStateT (traverse c ps) s
+  run2S s cs ps  = evalStateT (entangle $ cs <*> ps) s
+  run2AS s cs ps = traverse (\m -> evalStateT m s) (cs <*> ps)
+  run1 c ps      = do hvar <- src; run1S hvar c ps
+  run2 cs ps     = do hvar <- src; run2S hvar cs ps
+  run2A cs ps    = do hvar <- src; run2AS hvar cs ps
 
-
--- hiding HiddenVar and export
-run1 :: Copy M -> Context Property -> IO (Context Decision)
-run1 c ps = do
-  hvar <- src
-  reifyEffect (traverse c ps) hvar
-
-
--- hiding HiddenVar and export
-run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
-run2 cs ps = do
-  hvar <- src
-  reifyEffect (sequence $ cs <*> ps) hvar
 
 
 -- [TODO] connection to <call-by-reference> as in PL
@@ -124,6 +120,7 @@ run2 cs ps = do
 -- if we set the source to emit only (PPP), we can tell the causal flow
 
 
+{--
 -- no concept of quantum states and observables as projectors
 -- is it still possible to express <commutativity>?
 ltor, rtol :: Context Property -> IO HiddenVar -> IO HiddenVar
@@ -135,3 +132,4 @@ rtol = flip $ foldr f
   where
     f :: Property -> IO HiddenVar -> IO HiddenVar
     f p s = do hvar <- s; execStateT (sys p) hvar
+--}

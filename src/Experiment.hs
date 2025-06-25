@@ -3,7 +3,7 @@ module Experiment where
 import Config
 import Context2
 import RandomUtils
-import State.PaperOthing (sys2, run2, label)
+import State.PaperForget
 
 
 -- pov of 2 reviewers:

@@ -1,9 +1,11 @@
-module Concur.PaperForget (sys, run1, run2) where
+module Concur.PaperForget (
+  sys, sys1, sys2, run1, run2, run2A, label
+) where
 
 import Config
 import Context2
 import RandomUtils
-import Concur.MyLock (withLock)
+import Concur.MyLock (atomicIO, withLock)
 import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Concurrent.Async
@@ -105,43 +107,18 @@ sys2 = return $ Context (sys, sys)
 run1 :: Copy M -> Context Property -> IO (Context Decision)
 run1 c ps = do
   hvar <- src
-  lock <- newTVarIO False
-  mapConcurrently (\m -> withLock lock $ runReaderT m hvar) (fmap c ps)
+  mapConcurrently (\m -> atomicIO $ runReaderT m hvar) (fmap c ps)
 
 
--- hiding HiddenVar and export
+-- still sequential, not using concurrency
 run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
 run2 cs ps = do
   hvar <- src
-  lock <- newTVarIO False
-  mapConcurrently (\m -> withLock lock $ runReaderT m hvar) (cs <*> ps)
+  runReaderT (entangle $ cs <*> ps) hvar
 
 
-
-{--
-inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect hvar (copy1, copy2) (prop1, prop2) = do
-  lock <- newTVarIO False
-  (dec1, dec2) <- concurrently 
-    (withLock lock $ runReaderT (copy1 prop1) hvar)
-    (withLock lock $ runReaderT (copy2 prop2) hvar)
-  return (dec1, dec2)
-
-
-runTrial :: IO ReviewerAgreement
-runTrial = do
-  let r1 = Reviewer randomProperty
-      r2 = Reviewer randomProperty
-      tr = Trial {
-          source = randomPaper >>= (\p -> newTVarIO p)
-        , copies = return (sys, sys)
-        , reviewers = (r1, r2)
-        , measure = inspect
-      } 
-  getAgreement $ executeTr tr
-
-
-main :: IO ()
-main = do
-  printStats "(Concurrency, Forget)" 10000 runTrial
---}
+-- hiding HiddenVar and export
+run2A :: Context (Copy M) -> Context Property -> IO (Context Decision)
+run2A cs ps = do
+  hvar <- src
+  mapConcurrently (\m -> atomicIO $ runReaderT m hvar) (cs <*> ps)

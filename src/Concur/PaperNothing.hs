@@ -3,7 +3,7 @@ module Concur.PaperNothing (sys, sys1, sys2, run1, run2, label) where
 import Config
 import Context2
 import RandomUtils
-import Concur.MyLock (withLock)
+import Concur.MyLock (atomicIO, withLock)
 import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Concurrent.Async

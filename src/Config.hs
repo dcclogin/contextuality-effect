@@ -13,6 +13,9 @@ import Text.Printf
 data Property = Margins | FontSize | NumPages
   deriving (Eq, Ord, Show, Enum, Bounded)
 
+data Direction = L | R
+  deriving (Eq, Ord, Show)
+
 -- Each property passes or fails a rule
 data Decision = Fail | Pass
   deriving (Eq, Ord, Show)
@@ -31,7 +34,6 @@ data Paper = Paper {
   , numPages :: Maybe Decision
 } deriving (Eq, Show)
 
-
 {--
 -- a Copy is what a Paper appears/discloses its interface to reviewers
 -- a.k.a. what is "observable" of a Paper
@@ -45,6 +47,15 @@ type Copy m = Property -> m Decision
 type Observable m = m Decision
 -- reviewer's choice as an input
 data Reviewer = Reviewer { choice :: IO Property }
+
+-- distribute one copy (particle)
+distribute1 :: (Monad m) => Copy m -> IO (Copy m)
+distribute1 particle = return particle
+
+-- distribute two copies (particles) forming a context
+distribute2 :: (Monad m) => Copy m -> Copy m -> IO (Context (Copy m))
+distribute2 particle1 particle2 = return $ Context (particle1, particle2)
+
 
 -- [TODO]: "extensible"
 data (Monad m) => Model s m = Model {
@@ -78,6 +89,10 @@ notD :: Bool -> Decision
 notD False = Fail
 notD True  = Pass
 
+notM :: (Monad m) => Decision -> m Decision
+notM Fail = return Pass
+notM Pass = return Fail
+
 {--
 type Mod = Outcome -> Outcome
 type ModList = [Mod]
@@ -87,6 +102,10 @@ applyMod :: Outcome -> ModList -> Outcome
 applyMod o [] = o
 applyMod o (m:ms) = applyMod (m o) ms
 --}
+
+
+entangle :: (Monad m) => Context (m Decision) -> m (Context Decision)
+entangle = sequence
 
 
 -- pov: reviewers
