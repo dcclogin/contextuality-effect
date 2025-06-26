@@ -56,6 +56,9 @@ distribute1 particle = return particle
 distribute2 :: (Monad m) => Copy m -> Copy m -> IO (Context (Copy m))
 distribute2 particle1 particle2 = return $ Context (particle1, particle2)
 
+distribute2Same :: (Monad m) => Copy m -> IO (Context (Copy m))
+distribute2Same particle = return $ pure particle
+
 
 -- [TODO]: "extensible"
 data (Monad m) => Model s m = Model {
@@ -93,19 +96,20 @@ notM :: (Monad m) => Decision -> m Decision
 notM Fail = return Pass
 notM Pass = return Fail
 
-{--
-type Mod = Outcome -> Outcome
-type ModList = [Mod]
 
--- the order of Mod matters
-applyMod :: Outcome -> ModList -> Outcome
-applyMod o [] = o
-applyMod o (m:ms) = applyMod (m o) ms
+{--
+f (Property -> m Decision) -> f Property -> f (m Decision)
 --}
 
-
+-- prepared for one-shot total measurement
+-- [TODO] rename this function
 entangle :: (Monad m) => Context (m Decision) -> m (Context Decision)
 entangle = sequence
+
+{--
+-- partial measurement
+-- entanglement swapping (a, b) (b, c) ==> (a, c)
+--}
 
 
 -- pov: reviewers

@@ -2,17 +2,20 @@
 module Contextuality where
 
 import Config
-import Context2
 
--- s : source that holds hidden variables
+
+-- f : the applicative context
 -- m : the monadic computational effect
+-- s : source that holds hidden variables
 -- m -> s : every m comes with a unique s
-class (Monad m) => Contextuality s m | m -> s where
+class (Applicative f, Traversable f, Monad m) => Contextuality f m s | m -> s where
   -- exposing source
-  run1S  :: s -> Copy m -> Context Property -> IO (Context Decision)
-  run2S  :: s -> Context (Copy m) -> Context Property -> IO (Context Decision)
-  run2AS :: s -> Context (Copy m) -> Context Property -> IO (Context Decision)
+  run1S  :: s -> Copy m -> f Property -> IO (f Decision)
+  run2S  :: s -> f (Copy m) -> f Property -> IO (f Decision)
+  run2AS :: s -> f (Copy m) -> f Property -> IO (f Decision)
   -- hidding source to reviewers
-  run1   :: Copy m -> Context Property -> IO (Context Decision)
-  run2   :: Context (Copy m) -> Context Property -> IO (Context Decision)
-  run2A  :: Context (Copy m) -> Context Property -> IO (Context Decision)
+  run1   :: Copy m -> f Property -> IO (f Decision)
+  run2   :: f (Copy m) -> f Property -> IO (f Decision)
+  run2A  :: f (Copy m) -> f Property -> IO (f Decision)
+  -- rename suggested by ChatGPT
+  -- runEntangled, runSeparated

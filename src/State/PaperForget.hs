@@ -103,13 +103,24 @@ sys2 :: IO (Context (Copy M))
 sys2 = distribute2 sys sys
 
 
-instance Contextuality HiddenVar M where
+instance Contextuality Context M HiddenVar where
   run1S s c ps   = evalStateT (traverse c ps) s
   run2S s cs ps  = evalStateT (entangle $ cs <*> ps) s
   run2AS s cs ps = traverse (\m -> evalStateT m s) (cs <*> ps)
   run1 c ps      = do hvar <- src; run1S hvar c ps
   run2 cs ps     = do hvar <- src; run2S hvar cs ps
   run2A cs ps    = do hvar <- src; run2AS hvar cs ps
+
+
+{-- from ChatGPT
+partialMeasureL :: Property -> Context (Copy M) -> M (Decision, Context (Copy M))
+partialMeasureL prop (Context (copyL, copyR)) = do
+  d <- copyL prop
+  newState <- get
+  let updatedL = \p -> evalStateT (copyL p) newState
+      updatedR = \p -> evalStateT (copyR p) newState
+  return (d, Context (updatedL, updatedR))
+--}
 
 
 
