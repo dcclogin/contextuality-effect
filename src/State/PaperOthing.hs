@@ -1,4 +1,9 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE 
+    TypeSynonymInstances
+  , FlexibleInstances
+  , MultiParamTypeClasses
+  , InstanceSigs 
+#-}
 module State.PaperOthing (
   sys1, sys2, run1, run1S, run2, run2S, run2A, run2AS, label
 ) where
@@ -23,9 +28,14 @@ type M = StateT HiddenVar IO
 src :: IO HiddenVar
 src = return Nothing
 
+run1   :: Copy M -> Context Property -> IO (Context Decision)
+run1 c ps = src >>= \s -> run1S s c ps
+run2   :: Context (Copy M) -> Context Property -> IO (Context Decision)
+run2 cs ps = src >>= \s -> run2S s cs ps
+run2A  :: Context (Copy M) -> Context Property -> IO (Context Decision)
+run2A cs ps = src >>= \s -> run2AS s cs ps
 
 instance PaperCore M where
-
   getDecision prop = do
     pixel <- get
     return $ case pixel of
@@ -35,15 +45,8 @@ instance PaperCore M where
   putDecision prop (Just dec) = put (Just (prop, dec))
   putDecision _ Nothing = put Nothing
 
-
-
--- render an ad hoc decision for 
--- just one property|predicate|question|attribute|observable
-renderPixel :: Property -> M Pixel
-renderPixel prop = do d <- liftIO randomDecision; return (prop, d)
-
-getPixel :: M (Maybe Pixel)
-getPixel = get
+instance PaperOthing M where
+  getPixel = get
 
 
 -- render a paper with an ad hoc decision for just one property
@@ -70,12 +73,3 @@ sys1 = distribute1 sys
 
 sys2 :: IO (Context (Copy M))
 sys2 = distribute2 sys sys
-
-
-instance Contextuality Context M HiddenVar where
-  run1S s c ps   = evalStateT (traverse c ps) s
-  run2S s cs ps  = evalStateT (entangle $ cs <*> ps) s
-  run2AS s cs ps = traverse (\m -> evalStateT m s) (cs <*> ps)
-  run1 c ps      = do hvar <- src; run1S hvar c ps
-  run2 cs ps     = do hvar <- src; run2S hvar cs ps
-  run2A cs ps    = do hvar <- src; run2AS hvar cs ps

@@ -1,4 +1,9 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE 
+    TypeSynonymInstances
+  , FlexibleInstances
+  , MultiParamTypeClasses
+  , InstanceSigs 
+#-}
 module Concur.PaperForget (
   sys1, sys2, run1, run1S, run2, run2S, run2A, run2AS, label
 ) where
@@ -27,9 +32,15 @@ type M = ReaderT HiddenVar IO
 src :: IO HiddenVar
 src = randomPaper >>= (\p -> newTVarIO p)
 
+run1   :: Copy M -> Context Property -> IO (Context Decision)
+run1 c ps = src >>= \s -> run1S s c ps
+run2   :: Context (Copy M) -> Context Property -> IO (Context Decision)
+run2 cs ps = src >>= \s -> run2S s cs ps
+run2A  :: Context (Copy M) -> Context Property -> IO (Context Decision)
+run2A cs ps = src >>= \s -> run2AS s cs ps
+
 
 instance PaperCore M where
-
   getDecision prop = do
     channel <- ask
     paper <- liftIO $ readTVarIO channel
@@ -37,7 +48,6 @@ instance PaperCore M where
       Margins   -> return (margins paper)
       FontSize  -> return (fontSize paper)
       NumPages  -> return (numPages paper)
-
   putDecision prop d = do
     channel <- ask
     paper <- liftIO $ readTVarIO channel
@@ -46,7 +56,7 @@ instance PaperCore M where
           FontSize -> paper { fontSize = d }
           NumPages -> paper { numPages = d }
     liftIO $ atomically $ writeTVar channel newPaper
-
+  renderDecision = liftIO randomDecision
 
 instance PaperForget M where
 
@@ -57,8 +67,11 @@ sys :: Copy M
 sys prop = do
   d <- getDecisionF prop
   case d of
-    Nothing -> renderDecision prop
-    Just dd -> return dd
+    Just dec -> return dec
+    Nothing -> do
+      dec <- renderDecision
+      putDecision prop (Just dec)
+      return dec
 
 
 sys1 :: IO (Copy M)
@@ -66,18 +79,3 @@ sys1 = distribute1 sys
 
 sys2 :: IO (Context (Copy M))
 sys2 = distribute2 sys sys
-
-
-instance Contextuality Context M HiddenVar where
-  run1S s c ps = 
-    mapConcurrently (\m -> atomicIO $ runReaderT m s) (fmap c ps)
-  
-  run2S s cs ps = -- still sequential, not using concurrency
-    runReaderT (entangle $ cs <*> ps) s
-
-  run2AS s cs ps =
-    mapConcurrently (\m -> atomicIO $ runReaderT m s) (cs <*> ps)
-
-  run1 c ps = do hvar <- src; run1S hvar c ps
-  run2 cs ps = do hvar <- src; run2S hvar cs ps
-  run2A cs ps = do hvar <- src; run2AS hvar cs ps

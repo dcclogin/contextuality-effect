@@ -1,4 +1,9 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE 
+    TypeSynonymInstances
+  , FlexibleInstances
+  , MultiParamTypeClasses
+  , InstanceSigs 
+#-}
 module Concur.PaperNothing (
   sys1, sys2, run1, run1S, run2, run2S, run2A, run2AS, label
 ) where
@@ -27,9 +32,15 @@ type M = ReaderT HiddenVar IO
 src :: IO HiddenVar
 src = newTVarIO thePaper
 
+run1   :: Copy M -> Context Property -> IO (Context Decision)
+run1 c ps = src >>= \s -> run1S s c ps
+run2   :: Context (Copy M) -> Context Property -> IO (Context Decision)
+run2 cs ps = src >>= \s -> run2S s cs ps
+run2A  :: Context (Copy M) -> Context Property -> IO (Context Decision)
+run2A cs ps = src >>= \s -> run2AS s cs ps
+
 
 instance PaperCore M where
-
   getDecision prop = do
     channel <- ask
     paper <- liftIO $ readTVarIO channel
@@ -37,7 +48,6 @@ instance PaperCore M where
       Margins   -> return (margins paper)
       FontSize  -> return (fontSize paper)
       NumPages  -> return (numPages paper)
-
   putDecision prop d = do
     channel <- ask
     paper <- liftIO $ readTVarIO channel
@@ -46,7 +56,7 @@ instance PaperCore M where
           FontSize -> paper { fontSize = d }
           NumPages -> paper { numPages = d }
     liftIO $ atomically $ writeTVar channel newPaper
-
+  renderDecision = liftIO randomDecision
 
 instance PaperNothing M where
 
@@ -59,11 +69,16 @@ sys prop = do
   case d of
     Just dec -> return dec
     Nothing -> do
-      dec <- renderDecision prop
-      b <- crecallDecision prop (== dec)
-      if (not b)
-        then return dec
-        else renderDecision prop
+      dec <- pick 1 (repeat renderDecision)
+      putDecision prop (Just dec)
+      return dec
+  where
+    pick :: Int -> [M Decision] -> M Decision
+    pick 0 (d:ds) = d
+    pick n (d:ds) = do
+      dec <- d
+      ok <- crecallDecision prop (== dec)
+      if not ok then return dec else pick (n - 1) ds
 
 
 sys1 :: IO (Copy M)
@@ -72,17 +87,3 @@ sys1 = distribute1 sys
 sys2 :: IO (Context (Copy M))
 sys2 = distribute2 sys sys
 
-
-instance Contextuality Context M HiddenVar where
-  run1S s c ps = 
-    mapConcurrently (\m -> atomicIO $ runReaderT m s) (fmap c ps)
-  
-  run2S s cs ps = -- still sequential, not using concurrency
-    runReaderT (entangle $ cs <*> ps) s
-
-  run2AS s cs ps =
-    mapConcurrently (\m -> atomicIO $ runReaderT m s) (cs <*> ps)
-
-  run1 c ps = do hvar <- src; run1S hvar c ps
-  run2 cs ps = do hvar <- src; run2S hvar cs ps
-  run2A cs ps = do hvar <- src; run2AS hvar cs ps
