@@ -1,9 +1,14 @@
-module Concur.PaperNothing (sys, sys1, sys2, run1, run2, label) where
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
+module Concur.PaperNothing (
+  sys1, sys2, run1, run1S, run2, run2S, run2A, run2AS, label
+) where
 
 import Config
 import Context2
+import Contextuality
 import RandomUtils
-import Concur.MyLock (atomicIO, withLock)
+import PaperCore
+import Concur.MyLock (atomicIO)
 import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Concurrent.Async
@@ -14,123 +19,70 @@ label :: String
 label = "(Cuncurrency model -- Nothing)"
 
 
--- communication channels for two observables
 type ChannelT = TVar Paper
-type M = ReaderT ChannelT IO
--- type alias
 type HiddenVar = ChannelT
+type M = ReaderT HiddenVar IO
 
 
 src :: IO HiddenVar
 src = newTVarIO thePaper
 
 
-getDecision :: Property -> M (Maybe Decision)
-getDecision prop = do
-  channel <- ask
-  paper <- liftIO $ readTVarIO channel
-  case prop of
-    Margins   -> return (margins paper)
-    FontSize  -> return (fontSize paper)
-    NumPages  -> return (numPages paper)
+instance PaperCore M where
 
-  
-putDecision :: Property -> Maybe Decision -> M ()
-putDecision prop d = do
-  channel <- ask
-  paper <- liftIO $ readTVarIO channel
-  let newPaper = case prop of
-	  Margins   -> paper { margins = d }
-	  FontSize  -> paper { fontSize = d }
-	  NumPages  -> paper { numPages = d }
-  liftIO $ atomically $ writeTVar channel newPaper
+  getDecision prop = do
+    channel <- ask
+    paper <- liftIO $ readTVarIO channel
+    case prop of
+      Margins   -> return (margins paper)
+      FontSize  -> return (fontSize paper)
+      NumPages  -> return (numPages paper)
 
-
--- render a random decision for a property
-renderDecision :: Property -> M Decision
-renderDecision prop = do
-  dd <- liftIO randomDecision
-  putDecision prop (Just dd)
-  return dd
+  putDecision prop d = do
+    channel <- ask
+    paper <- liftIO $ readTVarIO channel
+    let newPaper = case prop of
+          Margins  -> paper { margins = d }
+          FontSize -> paper { fontSize = d }
+          NumPages -> paper { numPages = d }
+    liftIO $ atomically $ writeTVar channel newPaper
 
 
--- check if any other properties have made a specific decision 
-crecallDecision :: Property -> (Maybe Decision -> Bool) -> M Bool
-crecallDecision Margins pred = do
-  d1 <- getDecision FontSize
-  d2 <- getDecision NumPages
-  return (pred d1 || pred d2)
-crecallDecision FontSize pred = do
-  d1 <- getDecision Margins
-  d2 <- getDecision NumPages
-  return (pred d1 || pred d2)
-crecallDecision NumPages pred = do
-  d1 <- getDecision Margins
-  d2 <- getDecision FontSize
-  return (pred d1 || pred d2)
+instance PaperNothing M where
 
 
--- decisions are rendered <by need> (TODO: refine the main logic for <nothing>)
+-- decisions are rendered <by need>
+-- TODO: same code as State.PaperNothing
 sys :: Copy M
 sys prop = do
   d <- getDecision prop
   case d of
-    Just dd -> return dd
+    Just dec -> return dec
     Nothing -> do
-      dd <- renderDecision prop
-      b <- crecallDecision prop (== Just dd)
+      dec <- renderDecision prop
+      b <- crecallDecision prop (== dec)
       if (not b)
-        then return dd
+        then return dec
         else renderDecision prop
 
 
 sys1 :: IO (Copy M)
-sys1 = return sys
+sys1 = distribute1 sys
 
 sys2 :: IO (Context (Copy M))
-sys2 = return $ Context (sys, sys)
+sys2 = distribute2 sys sys
 
 
--- hiding HiddenVar and export
-run1 :: Copy M -> Context Property -> IO (Context Decision)
-run1 c ps = do
-  hvar <- src
-  lock <- newTVarIO False
-  mapConcurrently (\m -> withLock lock $ runReaderT m hvar) (fmap c ps)
+instance Contextuality Context M HiddenVar where
+  run1S s c ps = 
+    mapConcurrently (\m -> atomicIO $ runReaderT m s) (fmap c ps)
+  
+  run2S s cs ps = -- still sequential, not using concurrency
+    runReaderT (entangle $ cs <*> ps) s
 
+  run2AS s cs ps =
+    mapConcurrently (\m -> atomicIO $ runReaderT m s) (cs <*> ps)
 
--- hiding HiddenVar and export
-run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
-run2 cs ps = do
-  hvar <- src
-  lock <- newTVarIO False
-  mapConcurrently (\m -> withLock lock $ runReaderT m hvar) (cs <*> ps)
-
-
-{--
-inspect :: HiddenVar -> (Copy, Copy) -> (Property, Property) -> IO (Decision, Decision)
-inspect hvar (copy1, copy2) (prop1, prop2) = do
-  lock <- newTVarIO False
-  (dec1, dec2) <- concurrently 
-    (withLock lock $ runReaderT (copy1 prop1) hvar)
-    (withLock lock $ runReaderT (copy2 prop2) hvar)
-  return (dec1, dec2)
-
-
-runTrial :: IO ReviewerAgreement
-runTrial = do
-  let r1 = Reviewer randomProperty
-      r2 = Reviewer randomProperty
-      tr = Trial {
-          source = newTVarIO thePaper
-        , copies = return (sys, sys)
-        , reviewers = (r1, r2)
-        , measure = inspect
-      } 
-  getAgreement $ executeTr tr
-
-
-main :: IO ()
-main = do
-  printStats "(Concurrency, Nothing)" 10000 runTrial
---}
+  run1 c ps = do hvar <- src; run1S hvar c ps
+  run2 cs ps = do hvar <- src; run2S hvar cs ps
+  run2A cs ps = do hvar <- src; run2AS hvar cs ps

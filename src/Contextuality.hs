@@ -1,10 +1,10 @@
 {-# LANGUAGE FunctionalDependencies #-}
 module Contextuality where
 
-import Config
+import Config (Property, Decision, Copy)
 
 
--- f : the applicative context
+-- f : the applicative context, commuting operations
 -- m : the monadic computational effect
 -- s : source that holds hidden variables
 -- m -> s : every m comes with a unique s

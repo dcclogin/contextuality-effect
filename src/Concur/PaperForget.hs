@@ -1,11 +1,14 @@
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
 module Concur.PaperForget (
-  sys, sys1, sys2, run1, run2, run2A, label
+  sys1, sys2, run1, run1S, run2, run2S, run2A, run2AS, label
 ) where
 
 import Config
 import Context2
+import Contextuality
 import RandomUtils
-import Concur.MyLock (atomicIO, withLock)
+import PaperCore
+import Concur.MyLock (atomicIO)
 import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Concurrent.Async
@@ -16,78 +19,40 @@ label :: String
 label = "(Cuncurrency model -- Forget)"
 
 
--- communication channels for two observables
 type ChannelT = TVar Paper
-type M = ReaderT ChannelT IO
--- type alias
 type HiddenVar = ChannelT
+type M = ReaderT HiddenVar IO
 
 
 src :: IO HiddenVar
 src = randomPaper >>= (\p -> newTVarIO p)
 
 
-getDecision :: Property -> M (Maybe Decision)
-getDecision prop = do
-  channel <- ask
-  paper <- liftIO $ readTVarIO channel
-  case prop of
-    Margins   -> return (margins paper)
-    FontSize  -> return (fontSize paper)
-    NumPages  -> return (numPages paper)
+instance PaperCore M where
 
-  
-putDecision :: Property -> Maybe Decision -> M ()
-putDecision prop d = do
-  channel <- ask
-  paper <- liftIO $ readTVarIO channel
-  let newPaper = case prop of
-		Margins   -> paper { margins = d }
-		FontSize  -> paper { fontSize = d }
-		NumPages  -> paper { numPages = d }
-  liftIO $ atomically $ writeTVar channel newPaper
+  getDecision prop = do
+    channel <- ask
+    paper <- liftIO $ readTVarIO channel
+    case prop of
+      Margins   -> return (margins paper)
+      FontSize  -> return (fontSize paper)
+      NumPages  -> return (numPages paper)
 
-
--- render a random decision for a property
-renderDecision :: Property -> M Decision
-renderDecision prop = do
-  dd <- liftIO randomDecision
-  putDecision prop (Just dd)
-  return dd
+  putDecision prop d = do
+    channel <- ask
+    paper <- liftIO $ readTVarIO channel
+    let newPaper = case prop of
+          Margins  -> paper { margins = d }
+          FontSize -> paper { fontSize = d }
+          NumPages -> paper { numPages = d }
+    liftIO $ atomically $ writeTVar channel newPaper
 
 
--- unconditional forget
-forgetDecision :: Property -> M ()
-forgetDecision prop = putDecision prop Nothing
-
-
--- conditional forget
-cforgetDecision :: Property -> (Maybe Decision -> Bool) -> M ()
-cforgetDecision prop pred = do
-  d <- getDecision prop
-  if pred d then forgetDecision prop else return ()
-
-
--- forgetful-get
-getDecisionF :: Property -> M (Maybe Decision)
-getDecisionF Margins = do
-  m <- getDecision Margins
-  cforgetDecision FontSize (== m)
-  cforgetDecision NumPages (== m)
-  return m
-getDecisionF FontSize = do
-  m <- getDecision FontSize
-  cforgetDecision Margins (== m)
-  cforgetDecision NumPages (== m)
-  return m
-getDecisionF NumPages = do
-  m <- getDecision NumPages
-  cforgetDecision Margins (== m)
-  cforgetDecision FontSize (== m)
-  return m
+instance PaperForget M where
 
 
 -- the main logic for quantum system <appearance>
+-- TODO: same code as in  State.PaperForget
 sys :: Copy M
 sys prop = do
   d <- getDecisionF prop
@@ -97,28 +62,22 @@ sys prop = do
 
 
 sys1 :: IO (Copy M)
-sys1 = return sys
+sys1 = distribute1 sys
 
 sys2 :: IO (Context (Copy M))
-sys2 = return $ Context (sys, sys)
+sys2 = distribute2 sys sys
 
 
--- hiding HiddenVar and export
-run1 :: Copy M -> Context Property -> IO (Context Decision)
-run1 c ps = do
-  hvar <- src
-  mapConcurrently (\m -> atomicIO $ runReaderT m hvar) (fmap c ps)
+instance Contextuality Context M HiddenVar where
+  run1S s c ps = 
+    mapConcurrently (\m -> atomicIO $ runReaderT m s) (fmap c ps)
+  
+  run2S s cs ps = -- still sequential, not using concurrency
+    runReaderT (entangle $ cs <*> ps) s
 
+  run2AS s cs ps =
+    mapConcurrently (\m -> atomicIO $ runReaderT m s) (cs <*> ps)
 
--- still sequential, not using concurrency
-run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
-run2 cs ps = do
-  hvar <- src
-  runReaderT (entangle $ cs <*> ps) hvar
-
-
--- hiding HiddenVar and export
-run2A :: Context (Copy M) -> Context Property -> IO (Context Decision)
-run2A cs ps = do
-  hvar <- src
-  mapConcurrently (\m -> atomicIO $ runReaderT m hvar) (cs <*> ps)
+  run1 c ps = do hvar <- src; run1S hvar c ps
+  run2 cs ps = do hvar <- src; run2S hvar cs ps
+  run2A cs ps = do hvar <- src; run2AS hvar cs ps

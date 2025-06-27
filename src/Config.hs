@@ -102,8 +102,8 @@ f (Property -> m Decision) -> f Property -> f (m Decision)
 --}
 
 -- prepared for one-shot total measurement
--- [TODO] rename this function
-entangle :: (Monad m) => Context (m Decision) -> m (Context Decision)
+-- [TODO] rename this function | put under Contextuality.hs
+entangle :: (Applicative f, Traversable f, Monad m) => f (m Decision) -> m (f Decision)
 entangle = sequence
 
 {--

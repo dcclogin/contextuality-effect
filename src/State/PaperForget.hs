@@ -6,6 +6,7 @@ module State.PaperForget (
 import Config
 import Context2
 import Contextuality
+import PaperCore
 import RandomUtils
 import Control.Monad.State.Lazy
 
@@ -29,62 +30,23 @@ src :: IO HiddenVar
 src = randomPaper
 
 
-getDecision :: Property -> M (Maybe Decision)
-getDecision prop = do
-  paper <- get
-  case prop of
-    Margins   -> return (margins paper)
-    FontSize  -> return (fontSize paper)
-    NumPages  -> return (numPages paper)
+instance PaperCore M where
 
-  
-putDecision :: Property -> Maybe Decision -> M ()
-putDecision prop d = do
-  paper <- get
-  let updatedPaper = case prop of
-		Margins   -> paper { margins = d }
-		FontSize  -> paper { fontSize = d }
-		NumPages  -> paper { numPages = d }
-  put updatedPaper
+  getDecision prop = do
+    paper <- get
+    case prop of
+      Margins  -> return (margins paper)
+      FontSize -> return (fontSize paper)
+      NumPages -> return (numPages paper)
 
+  putDecision prop d = do
+    paper <- get
+    case prop of
+      Margins  -> put paper { margins = d }
+      FontSize -> put paper { fontSize = d }
+      NumPages -> put paper { numPages = d }
 
--- render a random decision for a specific property
-renderDecision :: Property -> M Decision
-renderDecision prop = do
-  dd <- liftIO randomDecision
-  putDecision prop (Just dd)
-  return dd
-
-
--- unconditional forget
-forgetDecision :: Property -> M ()
-forgetDecision prop = putDecision prop Nothing
-
-
--- conditional forget
-cforgetDecision :: Property -> (Maybe Decision -> Bool) -> M ()
-cforgetDecision prop pred = do
-  d <- getDecision prop
-  if pred d then forgetDecision prop else return ()
-
-
--- forgetful-get
-getDecisionF :: Property -> M (Maybe Decision)
-getDecisionF Margins = do
-  m <- getDecision Margins
-  cforgetDecision FontSize (== m)
-  cforgetDecision NumPages (== m)
-  return m
-getDecisionF FontSize = do
-  m <- getDecision FontSize
-  cforgetDecision Margins (== m)
-  cforgetDecision NumPages (== m)
-  return m
-getDecisionF NumPages = do
-  m <- getDecision NumPages
-  cforgetDecision Margins (== m)
-  cforgetDecision FontSize (== m)
-  return m
+instance PaperForget M where
 
 
 -- the main logic for quantum system <appearance>
@@ -112,15 +74,16 @@ instance Contextuality Context M HiddenVar where
   run2A cs ps    = do hvar <- src; run2AS hvar cs ps
 
 
-{-- from ChatGPT
-partialMeasureL :: Property -> Context (Copy M) -> M (Decision, Context (Copy M))
-partialMeasureL prop (Context (copyL, copyR)) = do
+
+{--
+partialMeasureL :: Property -> Context (Copy M) -> M (Decision, Copy M)
+partialMeasureL prop (Context (copyL, _copyR)) = do
   d <- copyL prop
   newState <- get
-  let updatedL = \p -> evalStateT (copyL p) newState
-      updatedR = \p -> evalStateT (copyR p) newState
-  return (d, Context (updatedL, updatedR))
+  let updated = \p -> evalStateT (copyL p) newState
+  return (d, updated)
 --}
+
 
 
 

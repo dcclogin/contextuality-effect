@@ -44,6 +44,7 @@ library
       MerminCubes
       MerminSquare
       PaperReview
+      PaperCore
       PBA
       Pure.ContextDependent
       Pure.PaperSomething
