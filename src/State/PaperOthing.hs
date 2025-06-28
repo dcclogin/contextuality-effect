@@ -5,7 +5,7 @@
   , InstanceSigs 
 #-}
 module State.PaperOthing (
-  sys1, sys2, run1, run1S, run2, run2S, run2A, run2AS, label
+  sys1, sys2, runfA, runfP, runContextA, runContextP, label
 ) where
 
 import Config
@@ -28,12 +28,10 @@ type M = StateT HiddenVar IO
 src :: IO HiddenVar
 src = return Nothing
 
-run1   :: Copy M -> Context Property -> IO (Context Decision)
-run1 c ps = src >>= \s -> run1S s c ps
-run2   :: Context (Copy M) -> Context Property -> IO (Context Decision)
-run2 cs ps = src >>= \s -> run2S s cs ps
-run2A  :: Context (Copy M) -> Context Property -> IO (Context Decision)
-run2A cs ps = src >>= \s -> run2AS s cs ps
+runContextA :: Context (Copy M) -> Context Property -> IO (Context Decision)
+runContextA cs ps = src >>= \s -> runfA s cs ps
+runContextP :: Context (Copy M) -> Context Property -> IO (Context Decision)
+runContextP cs ps = src >>= \s -> runfP s cs ps
 
 instance PaperCore M where
   getDecision prop = do

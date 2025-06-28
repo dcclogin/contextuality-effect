@@ -24,8 +24,7 @@ source-repository head
 
 library
   exposed-modules:
-      Concur.ConcurrencyTest
-      Concur.MyLock
+      Concur.AtomicIO
       Concur.PaperForget
       Concur.PaperNothing
       Concur.PaperOthing

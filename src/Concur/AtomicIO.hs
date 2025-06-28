@@ -1,4 +1,4 @@
-module Concur.MyLock where
+module Concur.AtomicIO (atomicIO) where
 
 import System.IO.Unsafe
 import Control.Concurrent

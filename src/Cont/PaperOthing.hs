@@ -1,4 +1,4 @@
-module Cont.PaperOthing (sys, sys1, sys2, run1, run2, label) where
+module Cont.PaperOthing (sys, sys1, sys2, run2, label) where
 
 import Config
 import Context2
@@ -17,13 +17,25 @@ label = "(Continuation model -- Othing)"
 
 type Pixel = (Property, Decision)
 type M = YieldT Pixel Pixel Decision IO
--- in this model HiddenVar is purely redundant
--- it can be any type
-type HiddenVar = ()
+type Suspended = IteratorT Pixel Pixel Decision IO
+data Judge = Judge { mediate :: Context Suspended -> IO (Context Decision) }
+
+-- [ DONE ] Judge as HiddenVar
+-- [ OPTIONAL ] Judge as Reader Effect
+type HiddenVar = Judge
+
+
+raceJudge :: Judge
+raceJudge = Judge $ \(Context (Susp pixel1 k1, Susp pixel2 k2)) -> do
+  let proc1 = k1 pixel2 >>= \(Result d) -> return $ Context (d, snd pixel2)
+      proc2 = k2 pixel1 >>= \(Result d) -> return $ Context (snd pixel1, d)
+  race proc1 proc2 >>= \winner -> case winner of
+    Left res  -> return res
+    Right res -> return res
 
 
 src :: IO HiddenVar
-src = return ()
+src = return raceJudge
 
 
 -- render an ad hoc decision for 
@@ -32,14 +44,11 @@ renderPixel :: Property -> M Pixel
 renderPixel prop = do d <- liftIO randomDecision; return (prop, d)
 
 
--- render a paper with an ad hoc decision for just one property
 protocol :: Pixel -> Pixel -> Pixel -> Decision
-protocol py p1 (_, dd2) = 
-  case (py, p1) of
-    ((propy, ddy), (propm, dd1)) | propy == propm -> ddy
-    ((propy, ddy), (propm, dd1)) | ddy == dd1 -> dd2
-    ((propy, ddy), (propm, dd1)) | ddy /= dd1 -> dd1
-    _ -> error "internal bug."
+protocol (propY, decY) (propM, dec1) (_, dec2)
+  | propY == propM = decY   -- Same property: take remote's value
+  | decY == dec1   = dec2   -- Agreement: take secondary value
+  | otherwise      = dec1   -- Disagreement: take primary value
 
 
 sys :: Copy M
@@ -51,40 +60,19 @@ sys prop = do
 
 
 sys1 :: IO (Copy M)
-sys1 = return sys
+sys1 = distribute1 sys
 
 sys2 :: IO (Context (Copy M))
-sys2 = return $ Context (sys, sys)
+sys2 = distribute2 sys sys
 
 
--- TODO: it is possible to add a program for <Judge> as a mediator
--- now the inspect function serves as <Judge> implicitly
-
-
-run1 :: Copy M -> Context Property -> IO (Context Decision)
-run1 c ps = do
-  Context (Susp pixel1 k1, Susp pixel2 k2) <- traverse runYieldT $ fmap c ps
-  Result dec1 <- k1 pixel2
-  Result dec2 <- k2 pixel1
-  let proc1 = return $ Context (dec1, snd pixel2)
-      proc2 = return $ Context (snd pixel1, dec2)
-  winner <- race proc1 proc2  -- let them race!
-  case winner of
-    Left res  -> return res
-    Right res -> return res
-
+runWithJudge :: Judge -> Context (Copy M) -> Context Property -> IO (Context Decision)
+runWithJudge (Judge mediate) cs ps = do
+  suspended <- traverse runYieldT $ cs <*> ps
+  mediate suspended
 
 run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
-run2 cs ps = do
-  Context (Susp pixel1 k1, Susp pixel2 k2) <- traverse runYieldT $ cs <*> ps
-  Result dec1 <- k1 pixel2
-  Result dec2 <- k2 pixel1
-  let proc1 = return $ Context (dec1, snd pixel2)
-      proc2 = return $ Context (snd pixel1, dec2)
-  winner <- race proc1 proc2  -- let them race!
-  case winner of
-    Left res  -> return res
-    Right res -> return res
+run2 cs ps = runWithJudge raceJudge cs ps
 
 
 
