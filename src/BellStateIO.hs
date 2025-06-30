@@ -1,4 +1,4 @@
-module BellStateSimulation where
+module BellStateIO where
 
 -- import Context2
 import Control.Monad (replicateM)
@@ -36,13 +36,13 @@ qubit0 :: Qubit
 qubit0 = definiteIn Z Zero
 
 -- Hadamard gate swaps Z and X, leaves Y
-hadamardBasis :: Property -> Property
-hadamardBasis Z = X
-hadamardBasis X = Z
-hadamardBasis Y = Y
+hPerm :: Property -> Property
+hPerm Z = X
+hPerm X = Z
+hPerm Y = Y
 
 hadamard :: Qubit -> Qubit
-hadamard qubit prop = qubit (hadamardBasis prop)
+hadamard qubit prop = qubit (hPerm prop)
 
 -- CNOT logic on classical decisions
 cnotDecisions :: Context Decision -> Context Decision

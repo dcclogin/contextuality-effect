@@ -18,6 +18,34 @@ The key is to think of this weird thing (with the type `Paper`) in such a way th
 - ...hence the gap separates/divides paper and us paradoxically unites/unifies both.
 - ...this is what the motto of dialectics, **Two divides into One** means.
 
+
+
+
+Hence, this dialectical misrecognition—between client and server, between observer and observed—transcends the two dominant ideologies regarding their relationship:
+
+\begin{enumerate}
+    \item \textbf{Cliché materialism} (objective realism): Things exist independently of our knowledge or perception of them.
+    \item \textbf{Subjective idealism} (à la Berkeley): Things exist only insofar as they are perceived or known.
+    \item \textbf{Speculative reflexivity}: Things exist insofar as they are \emph{not yet known}—that is, their reality consists in a kind of structural failure of self-coincidence, which calls for an external mediation in order to be (mis)recognized.
+\end{enumerate}
+
+In this third view, the unknown is not a lack or a deficit—it is an ontological condition. The object (here: \texttt{Paper}) is not simply hidden from us; it is also hidden from itself. It does not fully grasp or determine its own properties, and it is only through the act of measurement—through interaction with a \emph{reviewer}, i.e., a moment of external reflection—that its state is brought into partial coherence.
+
+This means:
+\begin{itemize}
+    \item Our knowledge of the system reflects its own reflective grasp of itself.
+    \item Our ignorance is its internal incompleteness—its failure to self-determine.
+    \item Our error is its self-misunderstanding—projected outward.
+    \item We do not merely observe the system—we function as its mirror.
+\end{itemize}
+
+The observer thus plays a dual role: it is epistemically external, but ontologically internal. We are a necessary moment in the object’s own dialectic of self-realization—its antagonistic striving for determination.
+
+This is the very meaning of the dialectical motto: \textbf{Two divides into One}. The gap between observer and system does not reflect a clean break, but a constitutive division internal to the system itself. The subject-object split is not a fact about the world, but a structural feature of how the world realizes itself—partially, effectfully, and always under conditions of shared ignorance.
+
+
+
+
 ```haskell
 type Copy = Property -> M Decision
 ```

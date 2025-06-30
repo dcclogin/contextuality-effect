@@ -60,6 +60,10 @@ distribute2Same :: (Monad m) => Copy m -> IO (Context (Copy m))
 distribute2Same particle = return $ pure particle
 
 
+newtype QSys f m = 
+  QSys { system :: (Applicative f, Monad m) => f (Property -> m Decision) }
+
+
 -- [TODO]: "extensible"
 data (Monad m) => Model s m = Model {
     source      :: IO s
@@ -97,19 +101,10 @@ notM Fail = return Pass
 notM Pass = return Fail
 
 
-{--
-f (Property -> m Decision) -> f Property -> f (m Decision)
---}
-
 -- prepared for one-shot total measurement
 -- [TODO] rename this function | put under Contextuality.hs
 entangle :: (Applicative f, Traversable f, Monad m) => f (m Decision) -> m (f Decision)
 entangle = sequence
-
-{--
--- partial measurement
--- entanglement swapping (a, b) (b, c) ==> (a, c)
---}
 
 
 -- pov: reviewers

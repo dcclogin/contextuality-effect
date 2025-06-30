@@ -59,7 +59,6 @@ instance PaperForget M where
 
 
 
--- the main logic for quantum system <appearance>
 sys :: Copy M
 sys prop = do
   d <- getDecisionF prop
