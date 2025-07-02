@@ -60,10 +60,6 @@ distribute2Same :: (Monad m) => Copy m -> IO (Context (Copy m))
 distribute2Same particle = return $ pure particle
 
 
-newtype QSys f m = 
-  QSys { system :: (Applicative f, Monad m) => f (Property -> m Decision) }
-
-
 -- [TODO]: "extensible"
 data (Monad m) => Model s m = Model {
     source      :: IO s

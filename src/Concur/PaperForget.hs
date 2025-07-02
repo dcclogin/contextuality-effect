@@ -5,7 +5,7 @@
   , InstanceSigs 
 #-}
 module Concur.PaperForget (
-  sys1, sys2, runfA, runfP, runContextA, runContextP, label
+  bipartite, runfSeq, runfPar, runContextA, runContextP, label
 ) where
 
 import Config
@@ -32,9 +32,9 @@ src :: IO HiddenVar
 src = randomPaper >>= (\p -> newTVarIO p)
 
 runContextA :: Context (Copy M) -> Context Property -> IO (Context Decision)
-runContextA cs ps = src >>= \s -> runfA s cs ps
+runContextA cs ps = src >>= \s -> runfSeq s cs ps
 runContextP :: Context (Copy M) -> Context Property -> IO (Context Decision)
-runContextP cs ps = src >>= \s -> runfP s cs ps
+runContextP cs ps = src >>= \s -> runfPar s cs ps
 
 
 instance PaperCore M where
@@ -60,8 +60,8 @@ instance PaperForget M where
 
 -- the main logic for quantum system <appearance>
 -- TODO: same code as in  State.PaperForget
-sys :: Copy M
-sys prop = do
+copy :: Copy M
+copy prop = do
   d <- getDecisionF prop
   case d of
     Just dec -> return dec
@@ -71,8 +71,5 @@ sys prop = do
       return dec
 
 
-sys1 :: IO (Copy M)
-sys1 = distribute1 sys
-
-sys2 :: IO (Context (Copy M))
-sys2 = distribute2 sys sys
+bipartite :: IO (Context (Copy M))
+bipartite = distribute2 copy copy

@@ -11,7 +11,7 @@ data Property = X | Y | Z deriving (Eq, Show)
 -- Measurement outcomes
 data Decision = Zero | One deriving (Eq, Show)
 
-type M = StateT (Context Decision) IO
+type M = StateT (Context (Maybe Decision)) IO
 
 -- Flip a decision
 flipDecision :: Decision -> Decision
@@ -59,10 +59,10 @@ cnotGate (Context (qc, qt)) = Context (qc', qt')
   where
     qc' prop = do
       val <- qc prop
-      modify (\(Context (_, b)) -> Context (val, b))
+      modify (\(Context (a, b)) -> Context (Just val, b))
       return val
     qt' prop = do
-      Context (ctrl, _) <- get
+      Context (Just ctrl, _) <- get
       tgt <- qt prop
       return $ if ctrl == One then flipDecision tgt else tgt
 
@@ -72,14 +72,14 @@ bellState :: Context (Qubit M)
 bellState = cnotGate (Context (hadamard qubitZ0, qubitZ0))
 
 
--- Sequence monadic effects to enforce nonlocal evaluation
-measure :: Context (Qubit M) -> Context Property -> IO (Context Decision)
-measure qs props = evalStateT (sequence $ qs <*> props) (Context (Zero, Zero))
+-- measure, then reify the effect
+measureR :: Context (Qubit M) -> Context Property -> IO (Context Decision)
+measureR qs props = evalStateT (sequence $ qs <*> props) (Context (Nothing, Nothing))
 
 -- Main testing function
 main :: IO ()
 main = do
   putStrLn "Simulating Bell state preparation (|Φ+⟩) measured in Z ⊗ Z:"
-  results <- replicateM 20 $ measure bellState (Context (Z, Z))
+  results <- replicateM 20 $ measureR bellState (Context (Z, Z))
   mapM_ print results
 

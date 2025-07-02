@@ -50,9 +50,8 @@ library
       Pure.SuperDeterminism
       Pure.SuperDeterminismProd
       RandomUtils
-      State.PaperCheating
+      -- State.PaperCheating
       State.PaperForget
-      State.PaperForgetLR
       State.PaperNothing
       State.PaperOthing
       State.StrongContextuality

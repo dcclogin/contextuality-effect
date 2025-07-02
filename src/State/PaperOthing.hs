@@ -5,7 +5,7 @@
   , InstanceSigs 
 #-}
 module State.PaperOthing (
-  sys1, sys2, runfA, runfP, runContextA, runContextP, label
+  bipartite, runfSeq, runfPar, runContextA, runContextP, label
 ) where
 
 import Config
@@ -29,9 +29,9 @@ src :: IO HiddenVar
 src = return Nothing
 
 runContextA :: Context (Copy M) -> Context Property -> IO (Context Decision)
-runContextA cs ps = src >>= \s -> runfA s cs ps
+runContextA cs ps = src >>= \s -> runfSeq s cs ps
 runContextP :: Context (Copy M) -> Context Property -> IO (Context Decision)
-runContextP cs ps = src >>= \s -> runfP s cs ps
+runContextP cs ps = src >>= \s -> runfPar s cs ps
 
 instance PaperCore M where
   getDecision prop = do
@@ -58,16 +58,13 @@ protocol (Just (propY, decY)) (propM, dec1) (_, dec2) -- _ must be == propM
   | otherwise      = return dec1
 
 
-sys :: Copy M
-sys prop = do
+copy :: Copy M
+copy prop = do
   mine1 <- renderPixel prop -- primary rendering (mandatory)
   mine2 <- renderPixel prop -- secondary rendering (eagerly)
   yours <- getPixel
   protocol yours mine1 mine2
 
 
-sys1 :: IO (Copy M)
-sys1 = distribute1 sys
-
-sys2 :: IO (Context (Copy M))
-sys2 = distribute2 sys sys
+bipartite :: IO (Context (Copy M))
+bipartite = distribute2 copy copy

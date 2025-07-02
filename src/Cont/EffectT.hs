@@ -1,5 +1,6 @@
 module Cont.EffectT where
 
+import Config (Decision)
 import Control.Monad.Cont
 
 -- Iterator with monadic continuation
@@ -36,6 +37,11 @@ runYieldT (YieldT m) = runContT m (return . Result)
 yield :: Monad m => o -> YieldT i o r m i
 yield o = callCC $ \k ->
   YieldT $ ContT $ \_ -> return $ Susp o (\i -> runYieldT (k i))
+
+type Suspended i o = IteratorT i o Decision IO
+
+data (Applicative f) => Judge f i o =
+  Judge { mediate :: f (Suspended i o) -> IO (f Decision) }
 
 example :: YieldT Int String String IO String
 example = do

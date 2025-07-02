@@ -1,8 +1,18 @@
-module Cont.PaperOthing (sys, sys1, sys2, run2, label) where
+{-# LANGUAGE 
+    TypeSynonymInstances
+  , FlexibleInstances
+  , MultiParamTypeClasses
+  , InstanceSigs 
+#-}
+module Cont.PaperOthing (
+  bipartite, runfAll, runContextA, label
+) where
 
 import Config
 import Context2
 import RandomUtils
+import PaperCore
+import Contextuality
 import Cont.EffectT
 import Control.Monad.Cont
 import Control.Concurrent.Async
@@ -17,16 +27,13 @@ label = "(Continuation model -- Othing)"
 
 type Pixel = (Property, Decision)
 type M = YieldT Pixel Pixel Decision IO
-type Suspended = IteratorT Pixel Pixel Decision IO
-data Judge = Judge { mediate :: Context Suspended -> IO (Context Decision) }
-
 -- [ DONE ] Judge as HiddenVar
 -- [ OPTIONAL ] Judge as Reader Effect
-type HiddenVar = Judge
+type HiddenVar = Judge Context Pixel Pixel
 
 
-raceJudge :: Judge
-raceJudge = Judge $ \(Context (Susp pixel1 k1, Susp pixel2 k2)) -> do
+src :: IO HiddenVar
+src = return $ Judge $ \(Context (Susp pixel1 k1, Susp pixel2 k2)) -> do
   let proc1 = k1 pixel2 >>= \(Result d) -> return $ Context (d, snd pixel2)
       proc2 = k2 pixel1 >>= \(Result d) -> return $ Context (snd pixel1, d)
   race proc1 proc2 >>= \winner -> case winner of
@@ -34,14 +41,13 @@ raceJudge = Judge $ \(Context (Susp pixel1 k1, Susp pixel2 k2)) -> do
     Right res -> return res
 
 
-src :: IO HiddenVar
-src = return raceJudge
+runContextA :: Context (Copy M) -> Context Property -> IO (Context Decision)
+runContextA cs ps = src >>= \s -> runfAll s cs ps
 
 
--- render an ad hoc decision for 
--- just one property|predicate|question|attribute|observable
-renderPixel :: Property -> M Pixel
-renderPixel prop = do d <- liftIO randomDecision; return (prop, d)
+instance PaperCore M where
+
+instance PaperOthing M where
 
 
 protocol :: Pixel -> Pixel -> Pixel -> Decision
@@ -51,28 +57,17 @@ protocol (propY, decY) (propM, dec1) (_, dec2)
   | otherwise      = dec1   -- Disagreement: take primary value
 
 
-sys :: Copy M
-sys prop = do
+copy :: Copy M
+copy prop = do
   mine1 <- renderPixel prop -- primary rendering
   mine2 <- renderPixel prop -- secondary rendering
   yours <- yield mine1 -- receive yours; send mine1
   return (protocol yours mine1 mine2)
 
 
-sys1 :: IO (Copy M)
-sys1 = distribute1 sys
+bipartite :: IO (Context (Copy M))
+bipartite = distribute2 copy copy
 
-sys2 :: IO (Context (Copy M))
-sys2 = distribute2 sys sys
-
-
-runWithJudge :: Judge -> Context (Copy M) -> Context Property -> IO (Context Decision)
-runWithJudge (Judge mediate) cs ps = do
-  suspended <- traverse runYieldT $ cs <*> ps
-  mediate suspended
-
-run2 :: Context (Copy M) -> Context Property -> IO (Context Decision)
-run2 cs ps = runWithJudge raceJudge cs ps
 
 
 

@@ -22,9 +22,9 @@ runTrial = do
   let r1 = Reviewer randomProperty
       r2 = Reviewer randomProperty
       md = Model {
-          copies = sys2
+          copies = bipartite
         , reviewers = Context (r1, r2)
-        , runContext = run2
+        , runContext = runContextA
       }
   getAgreement $ executeModel md
 
