@@ -38,23 +38,15 @@ library
       Experiment
       ExperimentS
       Lib
-      M
-      ManufacturingQC
-      MerminCubes
       MerminSquare
-      PaperReview
       PaperCore
-      PBA
-      Pure.ContextDependent
-      Pure.PaperSomething
-      Pure.SuperDeterminism
-      Pure.SuperDeterminismProd
+      Identity.ContextDependent
+      Identity.PaperSomething
       RandomUtils
       -- State.PaperCheating
       State.PaperForget
       State.PaperNothing
       State.PaperOthing
-      State.StrongContextuality
   other-modules:
       Paths_contextuality_effect
   autogen-modules:

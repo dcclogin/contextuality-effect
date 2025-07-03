@@ -6,12 +6,13 @@
 #-}
 module Contextuality where
 
-import Config (Property, Decision, Copy)
+import Config (PaperC, Property, Decision, Copy)
 import Context2
 import Control.Monad.State.Lazy
 import Control.Concurrent.STM
 import Control.Concurrent.Async
 import Control.Monad.Reader
+import Control.Monad.Identity
 import Concur.AtomicIO (atomicIO)
 import Cont.EffectT
 
@@ -43,6 +44,15 @@ class (Applicative f, Traversable f, Monad m) => Contextuality f m s | m -> s, m
   runfAll :: s -> f (Copy m) -> f Property -> IO (f Decision)
 
 
+-- for the classical local hidden variable model
+instance Contextuality Context Identity PaperC where
+  reifySingle _ = return . runIdentity
+  reifyForall _ = return . runIdentity
+  traverseCtx _ = traverse (return . runIdentity)
+  -- runfSeq _ cs ps = (return . runIdentity) $ jointM (measure cs ps)
+  -- runfPar _ cs ps = traverseCtx (return . runIdentity) (measure cs ps)
+
+
 -- generic instance for State (Forget, Nothing, Othing)
 instance Contextuality Context (StateT s IO) s where 
   reifySingle = flip evalStateT
@@ -61,7 +71,7 @@ instance Contextuality Context (ReaderT (TVar s) IO) (TVar s) where
   -- runfPar s cs ps = mapConcurrently (\m -> atomicIO $ runReaderT m s) (cs <*> ps)
 
 
--- generic instance for Continuation (Nothing, Othing)
+-- generic instance for Yield (Nothing, Othing)
 instance Contextuality Context (YieldT i o Decision IO) (Judge Context i o) where
   runfAll (Judge mediate) cs ps = do
     suspended <- traverse runYieldT (measure cs ps)

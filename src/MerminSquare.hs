@@ -1,5 +1,7 @@
 module MerminSquare where
 
+-- prototyping Mermin square
+
 type Decision = Bool
 
 -- a row is allowed to have odd number of True

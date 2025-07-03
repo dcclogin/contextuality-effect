@@ -3,7 +3,7 @@ module ExperimentS where
 import Config
 import Context2
 import RandomUtils
-import Pure.ContextDependent
+import Identity.ContextDependent
 
 
 -- objective pov
@@ -18,9 +18,9 @@ runTrialS = do
       sc = dependentSrc $ Context (prop1, prop2)
       md = Model {
           source = sc
-        , copies = makeCopy sc
+        , copies = makeBipartite sc
         , reviewers = Context (r1, r2)
-        , runContextS = run2S
+        , runContextS = runfSeq
       }
   getAgreement $ executeModelS md
 

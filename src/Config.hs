@@ -10,11 +10,9 @@ import Text.Printf
 
 
 -- The three formatting properties
+-- TODO: Sound, Major, Clear
 data Property = Margins | FontSize | NumPages
   deriving (Eq, Ord, Show, Enum, Bounded)
-
-data Direction = L | R
-  deriving (Eq, Ord, Show)
 
 -- Each property passes or fails a rule
 data Decision = Fail | Pass

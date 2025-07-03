@@ -3,7 +3,7 @@ module Experiment where
 import Config
 import Context2
 import RandomUtils
-import Cont.PaperOthing
+import Identity.PaperSomething
 
 
 -- pov of 2 reviewers:
