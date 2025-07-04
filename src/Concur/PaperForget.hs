@@ -1,9 +1,3 @@
-{-# LANGUAGE 
-    TypeSynonymInstances
-  , FlexibleInstances
-  , MultiParamTypeClasses
-  , InstanceSigs 
-#-}
 module Concur.PaperForget (
   bipartite, runfSeq, runfPar, runContextA, runContextP, label
 ) where
@@ -35,27 +29,6 @@ runContextA :: Context (Copy M) -> Context Property -> IO (Context Decision)
 runContextA cs ps = src >>= \s -> runfSeq s cs ps
 runContextP :: Context (Copy M) -> Context Property -> IO (Context Decision)
 runContextP cs ps = src >>= \s -> runfPar s cs ps
-
-
-instance PaperCore M where
-  getDecision prop = do
-    channel <- ask
-    paper <- liftIO $ readTVarIO channel
-    case prop of
-      Margins   -> return (margins paper)
-      FontSize  -> return (fontSize paper)
-      NumPages  -> return (numPages paper)
-  putDecision prop d = do
-    channel <- ask
-    paper <- liftIO $ readTVarIO channel
-    let newPaper = case prop of
-          Margins  -> paper { margins = d }
-          FontSize -> paper { fontSize = d }
-          NumPages -> paper { numPages = d }
-    liftIO $ atomically $ writeTVar channel newPaper
-  renderDecision = liftIO randomDecision
-
-instance PaperForget M where
 
 
 -- the main logic for quantum system <appearance>

@@ -1,9 +1,3 @@
-{-# LANGUAGE 
-    TypeSynonymInstances
-  , FlexibleInstances
-  , MultiParamTypeClasses
-  , InstanceSigs 
-#-}
 module State.PaperForget (
   bipartite, runfSeq, runfPar, runContextA, runContextP, label
 ) where
@@ -40,25 +34,6 @@ runContextP :: Context (Copy M) -> Context Property -> IO (Context Decision)
 runContextP cs ps = src >>= \s -> runfPar s cs ps
 
 
-instance PaperCore M where
-  getDecision prop = do
-    paper <- get
-    case prop of
-      Margins  -> return (margins paper)
-      FontSize -> return (fontSize paper)
-      NumPages -> return (numPages paper)
-  putDecision prop d = do
-    paper <- get
-    case prop of
-      Margins  -> put paper { margins = d }
-      FontSize -> put paper { fontSize = d }
-      NumPages -> put paper { numPages = d }
-  renderDecision = liftIO randomDecision
-
-instance PaperForget M where
-
-
-
 copy :: Copy M
 copy prop = do
   d <- getDecisionF prop
@@ -72,21 +47,3 @@ copy prop = do
 
 bipartite :: IO (Context (Copy M))
 bipartite = distribute2 copy copy
-
-
-
-{--
-partialMeasureL :: Property -> Context (Copy M) -> M (Decision, Copy M)
-partialMeasureL prop (Context (copyL, _copyR)) = do
-  d <- copyL prop
-  newState <- get
-  let updated = \p -> evalStateT (copyL p) newState
-  return (d, updated)
---}
-
-
-
-
--- [TODO] connection to <call-by-reference> as in PL
--- this is an causal model
--- if we set the source to emit only (PPP), we can tell the causal flow

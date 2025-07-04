@@ -21,27 +21,28 @@ import Cont.EffectT
 -- m : the monadic computational effect
 -- s : source that holds hidden variables
 -- m -> s : every m comes with a unique s
-class (Applicative f, Traversable f, Monad m) => Contextuality f m s | m -> s, m -> f where
-  -- (optional) reify effect for a single monad
-  reifySingle :: s -> m Decision -> IO Decision
-  -- (optional) reify effect for all monads within the context f
-  reifyForall :: s -> m (f Decision) -> IO (f Decision)
-  -- (optional) traverse the context f in various manners
-  traverseCtx :: (m Decision -> IO Decision) -> f (m Decision) -> IO (f Decision)
-  -- measurement of all observables in the context f
-  measure :: f (Copy m) -> f Property -> f (m Decision)
-  measure = (<*>)
-  -- joint measurement of all observables in the context f
-  jointM :: f (m Decision) -> m (f Decision)
-  jointM = sequence
-  -- run all sequentially and get the result in IO environment
-  runfSeq :: s -> f (Copy m) -> f Property -> IO (f Decision)
-  runfSeq s cs ps = reifyForall s (jointM $ measure cs ps)
-  -- (optional) run all in parallel and get the result in IO environment
-  runfPar :: s -> f (Copy m) -> f Property -> IO (f Decision)
-  runfPar s cs ps = traverseCtx (reifySingle s) (measure cs ps)
-  -- placeholder for other run methods
-  runfAll :: s -> f (Copy m) -> f Property -> IO (f Decision)
+class (Applicative f, Traversable f, Monad m) => 
+  Contextuality f m s | m -> s, m -> f where
+    -- (optional) reify effect for a single monad
+    reifySingle :: s -> m Decision -> IO Decision
+    -- (optional) reify effect for all monads within the context f
+    reifyForall :: s -> m (f Decision) -> IO (f Decision)
+    -- (optional) traverse the context f in various manners
+    traverseCtx :: (m Decision -> IO Decision) -> f (m Decision) -> IO (f Decision)
+    -- measurement of all observables in the context f
+    measure :: f (Copy m) -> f Property -> f (m Decision)
+    measure = (<*>)
+    -- joint measurement of all observables in the context f
+    jointM :: f (m Decision) -> m (f Decision)
+    jointM = sequence
+    -- run all sequentially and get the result in IO environment
+    runfSeq :: s -> f (Copy m) -> f Property -> IO (f Decision)
+    runfSeq s cs ps = reifyForall s (jointM $ measure cs ps)
+    -- (optional) run all in parallel and get the result in IO environment
+    runfPar :: s -> f (Copy m) -> f Property -> IO (f Decision)
+    runfPar s cs ps = traverseCtx (reifySingle s) (measure cs ps)
+    -- placeholder for other run methods
+    runfAll :: s -> f (Copy m) -> f Property -> IO (f Decision)
 
 
 -- for the classical local hidden variable model
@@ -49,8 +50,8 @@ instance Contextuality Context Identity PaperC where
   reifySingle _ = return . runIdentity
   reifyForall _ = return . runIdentity
   traverseCtx _ = traverse (return . runIdentity)
-  -- runfSeq _ cs ps = (return . runIdentity) $ jointM (measure cs ps)
-  -- runfPar _ cs ps = traverseCtx (return . runIdentity) (measure cs ps)
+  -- runfSeq _s cs ps = reifyForall _s $ jointM (measure cs ps)
+  -- runfPar _s cs ps = traverseCtx (reifySingle _s) (measure cs ps)
 
 
 -- generic instance for State (Forget, Nothing, Othing)

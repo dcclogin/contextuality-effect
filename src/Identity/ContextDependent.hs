@@ -1,9 +1,3 @@
-{-# LANGUAGE 
-    TypeSynonymInstances
-  , FlexibleInstances
-  , MultiParamTypeClasses
-  , InstanceSigs 
-#-}
 module Identity.ContextDependent (
   makeBipartite, dependentSrc, runfSeq, runfPar, label
 ) where

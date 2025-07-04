@@ -1,9 +1,3 @@
-{-# LANGUAGE 
-    TypeSynonymInstances
-  , FlexibleInstances
-  , MultiParamTypeClasses
-  , InstanceSigs 
-#-}
 module Cont.PaperOthing (
   bipartite, runfAll, runContextA, label
 ) where
@@ -25,7 +19,6 @@ label = "(Continuation model -- Othing)"
 -- Intuition: if thePaper is indeed nothing, then we don't really need a blueprint.
 -- instead, we can just render a <partial paper>, or a <pixel> on-the-fly.
 
-type Pixel = (Property, Decision)
 type M = YieldT Pixel Pixel Decision IO
 -- [ DONE ] Judge as HiddenVar
 -- [ OPTIONAL ] Judge as Reader Effect
@@ -43,11 +36,6 @@ src = return $ Judge $ \(Context (Susp pixel1 k1, Susp pixel2 k2)) -> do
 
 runContextA :: Context (Copy M) -> Context Property -> IO (Context Decision)
 runContextA cs ps = src >>= \s -> runfAll s cs ps
-
-
-instance PaperCore M where
-
-instance PaperOthing M where
 
 
 protocol :: Pixel -> Pixel -> Pixel -> Decision

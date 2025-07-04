@@ -1,9 +1,3 @@
-{-# LANGUAGE 
-    TypeSynonymInstances
-  , FlexibleInstances
-  , MultiParamTypeClasses
-  , InstanceSigs 
-#-}
 module Concur.PaperOthing (
   bipartite, runfSeq, runfPar, runContextA, runContextP, label
 ) where
@@ -23,7 +17,6 @@ label :: String
 label = "(Cuncurrency model -- Othing)"
 
 
-type Pixel = (Property, Decision)
 type ChannelT = TVar (Maybe Pixel)
 type HiddenVar = ChannelT
 type M = ReaderT HiddenVar IO
@@ -36,18 +29,6 @@ runContextA :: Context (Copy M) -> Context Property -> IO (Context Decision)
 runContextA cs ps = src >>= \s -> runfSeq s cs ps
 runContextP :: Context (Copy M) -> Context Property -> IO (Context Decision)
 runContextP cs ps = src >>= \s -> runfPar s cs ps
-
-
-instance PaperCore M where
-  putDecision prop (Just dec) = do
-    channel <- ask
-    liftIO $ atomically $ writeTVar channel (Just (prop, dec))
-  putDecision _ Nothing = do
-    channel <- ask
-    liftIO $ atomically $ writeTVar channel Nothing
-
-instance PaperOthing M where
-  getPixel = do channel <- ask; liftIO $ readTVarIO channel
 
 
 -- render a paper with an ad hoc decision for just one property

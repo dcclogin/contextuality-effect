@@ -1,9 +1,3 @@
-{-# LANGUAGE 
-    TypeSynonymInstances
-  , FlexibleInstances
-  , MultiParamTypeClasses
-  , InstanceSigs 
-#-}
 module Concur.PaperNothing (
   bipartite, runfSeq, runfPar, runContextA, runContextP, label
 ) where
@@ -37,48 +31,31 @@ runContextP :: Context (Copy M) -> Context Property -> IO (Context Decision)
 runContextP cs ps = src >>= \s -> runfPar s cs ps
 
 
-instance PaperCore M where
-  getDecision prop = do
-    channel <- ask
-    paper <- liftIO $ readTVarIO channel
-    case prop of
-      Margins   -> return (margins paper)
-      FontSize  -> return (fontSize paper)
-      NumPages  -> return (numPages paper)
-  putDecision prop d = do
-    channel <- ask
-    paper <- liftIO $ readTVarIO channel
-    let newPaper = case prop of
-          Margins  -> paper { margins = d }
-          FontSize -> paper { fontSize = d }
-          NumPages -> paper { numPages = d }
-    liftIO $ atomically $ writeTVar channel newPaper
-  renderDecision = liftIO randomDecision
-
-instance PaperNothing M where
+copy :: Copy M
+copy prop = getDecision prop >>= maybe gen return
+  where gen = do
+          d  <- renderDecision
+          ok <- recallDecision prop (== d)
+          d  <- if ok then renderDecision else return d
+          putDecision prop (Just d) >> return d
 
 
 -- decisions are rendered <by need>
 -- TODO: same code as State.PaperNothing
-copy :: Copy M
-copy prop = do
-  d <- getDecision prop
-  case d of
-    Just dec -> return dec
-    Nothing -> do
-      dec <- pick 1 (repeat renderDecision)
-      putDecision prop (Just dec)
-      return dec
+copyN :: Int -> Copy M
+copyN n prop = getDecision prop >>= maybe gen return
   where
-    pick :: Int -> [M Decision] -> M Decision
-    pick 0 (d:ds) = d
-    pick n (d:ds) = do
-      dec <- d
-      ok <- crecallDecision prop (== dec)
-      if not ok then return dec else pick (n - 1) ds
+    gen = attempt n
+    attempt :: Int -> M Decision
+    attempt n = do
+      dec <- renderDecision
+      ok  <- recallDecision prop (== dec)
+      if not ok || n == 0
+        then putDecision prop (Just dec) >> return dec
+        else attempt (n - 1)
 
 
 
 bipartite :: IO (Context (Copy M))
-bipartite = distribute2 copy copy
+bipartite = distribute2 (copyN 1) (copyN 1)
 

@@ -1,9 +1,3 @@
-{-# LANGUAGE 
-    TypeSynonymInstances
-  , FlexibleInstances
-  , MultiParamTypeClasses
-  , InstanceSigs 
-#-}
 module Identity.PaperSomething (
   bipartite, runfSeq, runfPar, runContextA, runContextP, label
 ) where

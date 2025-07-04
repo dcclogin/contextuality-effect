@@ -20,17 +20,15 @@ data Decision = Fail | Pass
 
 -- classical paper
 data PaperC = PaperC {
-    marginsC  :: Decision
-  , fontSizeC :: Decision
-  , numPagesC :: Decision
+    marginsC, fontSizeC, numPagesC :: Decision
 } deriving (Eq, Show)
 
 -- quantum paper
 data Paper = Paper { 
-    margins  :: Maybe Decision
-  , fontSize :: Maybe Decision
-  , numPages :: Maybe Decision
+    margins, fontSize, numPages :: Maybe Decision
 } deriving (Eq, Show)
+
+type Pixel = (Property, Decision)
 
 {--
 -- a Copy is what a Paper appears/discloses its interface to reviewers
