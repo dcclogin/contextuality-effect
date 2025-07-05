@@ -1,10 +1,3 @@
-Yes, that’s a great idea.
-
-Including a compressed, analogy-based reference to the Mermin square can enrich the argument—as long as it’s presented accessibly, without assuming the reader knows quantum mechanics. The key is to highlight the structure of the paradox (conflicting constraints on consistent truth assignments) without invoking unfamiliar quantum formalism.
-
-Here’s a revision of the introduction that does this. It keeps the POPL audience in mind: they appreciate structured paradoxes, abstract reasoning, and the computational implications—but not physics jargon.
-
-
 Why is paper reviewing quantum? Not because it’s probabilistic, obscure, or occasionally unintelligible—though all of these may be true—but because it exhibits contextuality: the property that an outcome can depend on what else is being asked. In classical logic, truth is context-free: propositions have fixed values regardless of how or when they are evaluated. In contextual systems, by contrast, answers may vary with the surrounding evaluation context. The Kochen–Specker theorem formalizes this phenomenon in quantum mechanics, proving that no globally consistent assignment of truth values can explain all observable results.
 
 But contextuality is not exclusive to physics. Consider the more mundane setting of reviewing papers. At a programming languages conference, each paper is evaluated along three axes: (Q1) Is the paper technically sound? (Q2) Is the contribution significant? (Q3) Is the writing clear? These seem like independent yes/no questions—or so we like to believe.
