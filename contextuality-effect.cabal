@@ -24,26 +24,34 @@ source-repository head
 
 library
   exposed-modules:
+      Bonus.BellState
+      Bonus.BellStateIO
+      Bonus.M
+      Bonus.ManufacturingQC
+      Bonus.MerminCubes
+      Bonus.PaperReview
+      Bonus.PBA
+      Bonus.QuantumStates
       Concur.AtomicIO
       Concur.PaperForget
       Concur.PaperNothing
       Concur.PaperOthing
       Config
-      Context2
-      Contextuality
       Cont.Effect
       Cont.EffectT
       Cont.PaperNothing
       Cont.PaperOthing
+      Context2
+      Contextuality
       Experiment
       ExperimentS
+      Identity.ContextDependent
+      Identity.PaperSomething
       Lib
       MerminSquare
       PaperCore
-      Identity.ContextDependent
-      Identity.PaperSomething
       RandomUtils
-      -- State.PaperCheating
+      State.PaperCheating
       State.PaperForget
       State.PaperNothing
       State.PaperOthing
@@ -61,8 +69,6 @@ library
     , mtl
     , random
     , stm
-    , transformers
-    , matrix
   default-language: Haskell2010
 
 executable contextuality-effect-exe
@@ -82,8 +88,6 @@ executable contextuality-effect-exe
     , mtl
     , random
     , stm
-    , transformers
-    , matrix
   default-language: Haskell2010
 
 test-suite contextuality-effect-test
@@ -104,6 +108,4 @@ test-suite contextuality-effect-test
     , mtl
     , random
     , stm
-    , transformers
-    , matrix
   default-language: Haskell2010

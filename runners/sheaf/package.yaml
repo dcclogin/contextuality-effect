@@ -1,0 +1,18 @@
+name: sheaf
+version: 0.1.0.0
+
+dependencies:
+  - base >= 4.7 && < 5
+  - containers
+  - mtl
+  - random
+
+library:
+  source-dirs: src
+
+executables:
+  sheaf:
+    main: Main.hs
+    source-dirs: src
+    ghc-options: -Wall
+
