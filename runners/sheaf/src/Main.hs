@@ -1,5 +1,6 @@
-import ContextualStateRunner 
+
 import FamousScenarios
+import ContextualStateRunner
 
 main :: IO ()
 main = do

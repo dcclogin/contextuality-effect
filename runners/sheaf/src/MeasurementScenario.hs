@@ -45,7 +45,6 @@ probabilisticContext :: [o] -> Constraint v -> ([v] -> Bool) -> ContextDef o v
 probabilisticContext observables constraints accept =
   weightedContext observables constraints (\vs -> if accept vs then 1.0 else 0.0)
 
-
 -- | Build a full experiment from a list of contexts
 experiment :: Eq o => [ContextDef o v] -> ExperimentDef o v
 experiment cs = ExperimentDef
