@@ -48,7 +48,7 @@ hPerm X = Z
 hPerm Y = Y
 
 hadamard :: Monad m => Qubit m -> Qubit m
-hadamard qubit p = qubit (hPerm p)
+hadamard qubit = qubit . hPerm
 
 
 -- CNOT gate on Qubits using monadic effects
